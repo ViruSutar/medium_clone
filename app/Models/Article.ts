@@ -12,7 +12,7 @@ export default class Article extends BaseModel {
   public user_id: number;
 
   @column()
-  public article_type: string;
+  public article_categories: string;
 
   @column()
   public sub_category_id: number;

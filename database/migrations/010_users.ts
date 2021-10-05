@@ -11,7 +11,7 @@ export default class Users extends BaseSchema {
       table.enum('role',['AUTHOR','READER','ADMIN']).defaultTo('READER')
       table.string('email').unique().notNullable()
       table.string('password').nullable()
-      table.json('bookmark_id').nullable() //This will be array of ids .Ids of articles which user saves user subquery
+      table.integer('followers').defaultTo(0) //only authors will have followers
       table.boolean('is_active').defaultTo(true)
 
 

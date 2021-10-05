@@ -20,6 +20,11 @@
 
 import Route from '@ioc:Adonis/Core/Route'
 import './Routes/article'
+import './Routes/likes'
+import './Routes/comment'
+import './Routes/authorfollowers'
+
+
 
 Route.get('/', async () => {
   return { hello: 'world' }

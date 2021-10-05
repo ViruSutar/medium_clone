@@ -1,5 +1,7 @@
 import BaseSchema from '@ioc:Adonis/Lucid/Schema'
 
+
+  // TODO: limit the number of images in arrray
 export default class Articles extends BaseSchema {
   protected tableName = 'articles'
 
@@ -8,10 +10,11 @@ export default class Articles extends BaseSchema {
       table.increments('id').notNullable()
       table.string('title',100).notNullable()
       table.integer('user_id').unsigned().notNullable()
-      table.enum('article_type', ["Health","Science", "Arts & Entertainment", "Programming","other"]).notNullable()
+      table.enum('article_categories', ["Health","Science", "Arts & Entertainment", "Programming","other"]).notNullable()
       table.integer('sub_category_id').unsigned().notNullable()
       table.text('content','longtext').notNullable()
-      table.text('image').nullable()
+      table.bigInteger('likes_count').defaultTo(0)
+      table.json('image').nullable()
       table.boolean('is_active').defaultTo(true)
 
 

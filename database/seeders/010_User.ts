@@ -13,7 +13,6 @@ export default class UserSeeder extends BaseSeeder {
       {
         name:"user1",
         email:"user1@gmail.com",
-        bookmark_id:"[1,2,3]"
       },
       {
         name:"user2",

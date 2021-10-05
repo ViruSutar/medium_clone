@@ -1,17 +1,21 @@
 import { DateTime } from 'luxon'
 import { BaseModel, column } from '@ioc:Adonis/Lucid/Orm'
 
-export default class ArticleSubCategory extends BaseModel {
+export default class Reply extends BaseModel {
   @column({ isPrimary: true })
   public id: number
 
   @column()
-  public sub_categories:string
+  public reply:string
 
-  
+
   @column()
-  public is_active:boolean
-  
+  public comment_id:number
+
+
+  @column()
+  public user_id:number
+
   @column.dateTime({ autoCreate: true })
   public createdAt: DateTime
 

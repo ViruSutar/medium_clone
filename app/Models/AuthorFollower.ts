@@ -6,13 +6,10 @@ export default class AuthorFollower extends BaseModel {
   public id: number
 
   @column()
-  public author_id:number
+  public follower_id:number
 
   @column()
-  public followers_id:string
-
-  @column()
-  public article_id:number
+  public followee_id:string
 
   @column()
   public is_active:boolean

@@ -6,7 +6,7 @@ export default class ArticleSubCategories extends BaseSchema {
   public async up () {
     this.schema.createTable(this.tableName, (table) => {
       table.increments('id')            
-      table.string('sub_type_name') 
+      table.string('sub_categories').unique() 
       table.boolean('is_active').defaultTo(true)
 
 

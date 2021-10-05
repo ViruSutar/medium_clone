@@ -7,16 +7,16 @@ export default class ArticleSubCategorySeeder extends BaseSeeder {
 
     await ArticleSubCategory.createMany([
       {
-        sub_type_name:"Android_dev"
+        sub_categories:"Android_dev"
       },
       {
-        sub_type_name:"ios_dev"
+        sub_categories:"ios_dev"
       },
       {
-        sub_type_name:"Biotech"
+        sub_categories:"Biotech"
       },
       {
-        sub_type_name:"Climate_change"
+        sub_categories:"Climate_change"
       }
     ])
   }

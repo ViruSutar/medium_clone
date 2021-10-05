@@ -6,7 +6,7 @@ export default class LikeSeeder extends BaseSeeder {
     // Write your database queries inside the run method
    await Like.createMany([
      {
-       article_id:5,
+       article_id:1,
        user_id:1
      },
      {
