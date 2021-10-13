@@ -8,11 +8,11 @@ export default class WriterFollowers extends BaseSchema {
     this.schema.createTable(this.tableName, (table) => {
       table.increments("id");
       table.integer("follower_id").unsigned().notNullable();
-      table.integer("followee_id").unsigned().notNullable();
+      table.integer("author_id").unsigned().notNullable();
       table.boolean("is_active").defaultTo(true);
 
-      table.unique(["follower_id","followee_id"], "fk_follower_followee__idx");
-      // table.index(["followee_id"], "fk_followee_id_idx");
+      table.unique(["follower_id","author_id"], "fk_follower_author_idx");
+      // table.index(["author_id"], "fk_followee_id_idx");
 
       table
         .foreign("follower_id", "fk_follower_id_idx")
@@ -22,7 +22,7 @@ export default class WriterFollowers extends BaseSchema {
         .onUpdate("restrict");
 
       table
-        .foreign("followee_id", "fk_followee_id_idx")
+        .foreign("author_id", "fk_author_id_idx")
         .references("id")
         .inTable("users")
         .onDelete("restrict")

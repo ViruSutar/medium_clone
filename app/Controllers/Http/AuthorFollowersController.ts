@@ -8,16 +8,16 @@ import User from "App/Models/User";
 export default class AuthorFollowersController {
   public async follow({ request, response }: HttpContext) {
     try {
-      let { follower_id, followee_id } = request.all();
+      let { follower_id, author_id } = request.all();
 
       await AuthorFollower.create({
         follower_id,
-        followee_id,
+        author_id,
       });
 
       await Database.rawQuery(
         "update users set users.followers = users.followers + 1 where users.id = ? ",
-        followee_id
+        author_id
       );
       return response.send({ success: true });
     } catch (error) {
@@ -30,7 +30,7 @@ export default class AuthorFollowersController {
     try {
       let { unfollower_id, unfollowee_id } = request.all();
  
-      await AuthorFollower.query().where('follower_id',unfollower_id).where('followee_id',unfollowee_id).delete()
+      await AuthorFollower.query().where('follower_id',unfollower_id).where('author_id',unfollowee_id).delete()
 
 
       await Database.rawQuery(

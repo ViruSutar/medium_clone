@@ -23,7 +23,7 @@ import './Routes/article'
 import './Routes/likes'
 import './Routes/comment'
 import './Routes/authorfollowers'
-
+import './Routes/user'
 
 
 Route.get('/', async () => {

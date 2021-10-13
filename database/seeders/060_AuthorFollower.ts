@@ -6,14 +6,36 @@ export default class AuthorFollowerSeeder extends BaseSeeder {
     // Write your database queries inside the run method
    await  AuthorFollower.createMany([
      {
-       author_id:1,
-       followers_id:"[2,3]",
-       article_id:5
+      follower_id:4,
+      author_id:1
      },
      {
-      author_id:2,
-      followers_id:"[1,3]",
-      article_id:6
+      follower_id:5,
+      author_id:1
+    },
+    {
+      follower_id:6,
+      author_id:1
+    },
+    {
+      follower_id:7,
+      author_id:2
+    },
+    {
+      follower_id:9,
+      author_id:2
+    },
+    {
+      follower_id:5,
+      author_id:3
+    },
+    {
+      follower_id:6,
+      author_id:3
+    },
+    {
+      follower_id:7,
+      author_id:3
     }
    ])
   }
