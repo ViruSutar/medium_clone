@@ -3,7 +3,7 @@ import Database from "@ioc:Adonis/Lucid/Database";
 import Comment from "App/Models/Comment";
 import { schema } from "@ioc:Adonis/Core/Validator";
 import Reply from "App/Models/Reply";
-  
+
 export default class CommentsController {
   public async createComment({ request, response }: HttpContextContract) {
     try {
@@ -35,22 +35,49 @@ export default class CommentsController {
     response,
   }: HttpContextContract) {
     try {
-      // TODO:filters
-
-      let { article_id } = request.all();
+      let { article_id, sort_by_date, limit, offset } = request.all();
 
       await request.validate({
         schema: schema.create({
           article_id: schema.number(),
+          sort_by_date: schema.string.optional(),
         }),
       });
+      let orderByDateQuery = "";
+      let orderById = " comments.id desc ";
+      let limitQuery: number;
+
+      if (limit) {
+        limitQuery = parseInt(limit);
+      } else {
+        limitQuery = 10000000000;
+      }
+
+      if (!offset) {
+        offset = 0;
+      }
+
+      if (sort_by_date) {
+        orderById = "";
+        orderByDateQuery = " comments.created_at  " + sort_by_date;
+      }
 
       let data = await Database.query()
-        .select("comments.comment", "users.name")
+        .select(
+          "comments.id as comment_id",
+          "comments.comment",
+          "users.name",
+          Database.rawQuery(
+            "DATE_FORMAT(comments.created_at,'%d/%m/%Y') as Date"
+          )
+        )
         .from("comments")
         .leftJoin("articles", "articles.id", "=", "comments.article_id")
         .leftJoin("users", "users.id", "=", "comments.user_id")
-        .where("comments.article_id", article_id);
+        .where("comments.article_id", article_id)
+        .orderByRaw(Database.rawQuery(orderById + orderByDateQuery))
+        .limit(limitQuery)
+        .offset(parseInt(offset));
 
       return response.send({ success: true, Data: data });
     } catch (error) {
@@ -84,16 +111,19 @@ export default class CommentsController {
     }
   }
 
-  public async getCommentByIdWithReply({ request, response }: HttpContextContract) {
+  public async getCommentByIdWithReply({
+    request,
+    response,
+  }: HttpContextContract) {
     try {
       // TODO: Doubt on this api
       let { comment_id } = request.all();
-     
+
       await request.validate({
-        schema:schema.create({
-          comment_id:schema.number()
-        })
-      })
+        schema: schema.create({
+          comment_id: schema.number(),
+        }),
+      });
 
       let data = await Database.query()
         .select(

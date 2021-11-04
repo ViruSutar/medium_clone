@@ -69,8 +69,6 @@ export default class ArticlesController {
 
   public async listArticles({ request, response }: HttpContextContract) {
     try {
-      // TODO: filters and group by categories,sub_cate,by user_id,by_likes_count most liked will be on top
-      // TODO: change column name to subtype
 
       let {
         limit,
@@ -178,12 +176,28 @@ export default class ArticlesController {
 
   public async getArticleById({ request, response }: HttpContextContract) {
     try {
-      let { article_id } = request.all();
+      let { article_id,user_id } = request.all();
+
+      let userIdQuery=''
+      let params = {
+        article_id
+      }
+      await request.validate({
+        schema:schema.create({
+          article_id:schema.number(),
+          user_id:schema.number.optional()
+        })
+      })
+ 
+      if(user_id) {
+       userIdQuery = 'and articles.user_id = :user_id '
+       params['user_id'] = user_id
+      }
       let data = await Database.query()
         .select(
           "articles.title",
           "users.name as author",
-          "article_sub_categories.sub_type_name",
+          "article_sub_categories.sub_categories",
           "articles.content",
           "articles.image as image",
           "articles.likes_count"
@@ -196,8 +210,7 @@ export default class ArticlesController {
           "=",
           "articles.sub_category_id"
         )
-        .where("articles.is_active", 1)
-        .where("articles.id", article_id)
+        .whereRaw(Database.rawQuery("articles.is_active = 1 AND  articles.id = :article_id "+userIdQuery,params))
         .groupBy("articles.id");
 
       return response.send({
