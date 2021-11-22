@@ -21,9 +21,6 @@ export default class Article extends BaseModel {
   public content: string;
 
   @column()
-  public image: string;
-
-  @column()
   public is_active: boolean;
 
   @column.dateTime({ autoCreate: true })

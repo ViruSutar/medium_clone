@@ -14,7 +14,6 @@ export default class Articles extends BaseSchema {
       table.integer('sub_category_id').unsigned().notNullable()
       table.text('content','longtext').notNullable()
       table.bigInteger('likes_count').defaultTo(0)
-      table.json('image').nullable()
       table.boolean('is_active').defaultTo(true)
 
 

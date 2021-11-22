@@ -5,15 +5,17 @@ import Article from "App/Models/Article";
 import { schema } from "@ioc:Adonis/Core/Validator";
 import ArticleSubCategory from "App/Models/ArticleSubCategory";
 import UserNotification from "App/Models/UserNotification";
+import ArticlesImage from "App/Models/ArticlesImage";
 
 export default class ArticlesController {
   public async createArticle({ request, response }: HttpContextContract) {
     try {
       // TODO: multiple titles and images validation
+      // TODO: only one cover image 
       let {
         title,
         content,
-        image,
+        images,
         user_id,  
         article_categories,
         sub_category_id,
@@ -30,13 +32,14 @@ export default class ArticlesController {
       });
       let article = await Article.create({
         title,
-        image: JSON.stringify(image),
         content,
         user_id,
         article_categories,
         sub_category_id,
       });
-
+      
+      let articleId=article.id
+      
       //feed data in user_notification_table
       let user_ids = await Database.query()
         .select(
@@ -49,7 +52,7 @@ export default class ArticlesController {
         .leftJoin('users','users.id','=','author_followers.author_id')
         .where("author_followers.author_id", user_id) //this user_id is author_id
 
-      user_ids.map(async (row) => {
+     user_ids && user_ids.map(async (row) => {
         let user_id = row.followers;
         let author =row.author        
         await UserNotification.create({
@@ -57,6 +60,17 @@ export default class ArticlesController {
           message:author +" has uploaded article on "+ title
         })        
       });
+      
+
+      images && images.map((data)=>{
+        ArticlesImage.create({
+          article_id:articleId,
+          image_link:data.image_link,
+          is_cover:data.is_cover
+        })
+      })
+
+      
 
       //   await  UserNotification.create({})
 
@@ -134,16 +148,16 @@ export default class ArticlesController {
       let [data, total] = await Promise.all([
         Database.rawQuery(
           'select users.name as author_name, articles.title,articles.id as article_id,articles.article_categories,article_sub_categories.sub_categories, \
-                    articles.sub_category_id as sub_type_id,articles.likes_count, DATE_FORMAT(articles.created_at,"%d/%m/%Y") as Date\
+                    articles.sub_category_id as sub_type_id,articles.likes_count, DATE_FORMAT(articles.created_at,"%d/%m/%Y") as Date,\
+                    articles_images.image_link as image\
                      from articles \
                      left join article_sub_categories on article_sub_categories.id=articles.sub_category_id \
                      left join users on users.id=articles.user_id \
+                     join articles_images on articles_images.article_id = articles.id and is_cover = 1\
                      where articles.is_active=1 ' +
             typeQuery +
             subTypeQuery +
             authorNameQuery +
-            " group by articles.id  \
-                     " +
             orderById +
             orderByLikes +
             orderByDate +
@@ -156,6 +170,7 @@ export default class ArticlesController {
                      from articles \
                      left join article_sub_categories on article_sub_categories.id=articles.sub_category_id \
                      left join users on users.id=articles.user_id \
+                     join articles_images on articles_images.article_id = articles.id and is_cover = 1 \
                      where articles.is_active=1" +
             typeQuery +
             subTypeQuery +
@@ -195,12 +210,15 @@ export default class ArticlesController {
       }
       let data = await Database.query()
         .select(
-          "articles.title",
-          "users.name as author",
-          "article_sub_categories.sub_categories",
-          "articles.content",
-          "articles.image as image",
-          "articles.likes_count"
+          Database.rawQuery(
+            "articles.title, \
+             users.name as author, \
+            article_sub_categories.sub_categories,\
+            articles.content, \
+           json_arrayagg(articles_images.image_link) as image_link, \
+            articles.likes_count"
+          )
+         
         )
         .from("articles")
         .leftJoin("users", "users.id", "=", "articles.user_id")
@@ -210,8 +228,16 @@ export default class ArticlesController {
           "=",
           "articles.sub_category_id"
         )
+        .joinRaw(Database.rawQuery('join articles_images on articles_images.article_id = articles.id'))
         .whereRaw(Database.rawQuery("articles.is_active = 1 AND  articles.id = :article_id "+userIdQuery,params))
-        .groupBy("articles.id");
+        .groupBy("articles.id")
+        .then((data)=>{
+          return data.map((row)=>{
+            let article = row
+            article.image_link= JSON.parse(article.image_link)
+            return article
+          })
+        })
 
       return response.send({
         success: true,
@@ -229,7 +255,7 @@ export default class ArticlesController {
       let {
         article_id,
         title,
-        image,
+        images,
         content,
         user_id,
         article_categories,
@@ -238,7 +264,19 @@ export default class ArticlesController {
 
       let article = await Article.findByOrFail("id", article_id);
 
-      if (image) article.image = image;
+      if (images) 
+      {
+        await ArticlesImage.query().where('article_id',article_id).delete()
+
+        images.map((data)=>{
+        ArticlesImage.create({
+          article_id:article_id,
+          image_link:data.image_link,
+          is_cover:data.is_cover
+        })
+      })
+    }
+
       if (title) article.title = title;
       if (content) article.content = content;
       if (user_id) article.user_id = user_id;

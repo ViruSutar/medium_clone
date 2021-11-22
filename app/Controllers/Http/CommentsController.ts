@@ -13,16 +13,63 @@ export default class CommentsController {
         schema: schema.create({
           user_id: schema.number(),
           article_id: schema.number(),
-          comment: schema.string.optional(),
+          comment: schema.string(),
         }),
       });
 
-      await Comment.create({
+     let data= await Comment.create({
         user_id,
         article_id,
         comment,
       });
 
+      return response.send({ success: true,CommentId:data.id });
+    } catch (error) {
+      console.log(error);
+      return response.send({ success: false, message: error });
+    }
+  }
+
+  public async updateComment({request,response}){
+    try {
+      let {comment_id,comment}=request.all()
+
+      await request.validate({
+        schema:schema.create({
+          comment_id:schema.number(),
+          comment : schema.string.optional()
+        })
+      })
+
+      let data = await Comment.find(comment_id)
+
+      if(!data){
+        throw("comment not found")
+      }
+       
+      if(comment) data.comment=comment
+      data.save()
+
+      return response.send({ success: true });
+    } catch (error) {
+      console.log(error);
+      return response.send({ success: false, message: error });
+    }
+  }
+
+  public async deleteComment({request,response}){
+    try {
+      let {comment_id}=request.all()
+
+      let data = await Comment.find(comment_id)
+
+      if(!data){
+        throw("comment not found")
+      }
+
+      data.is_active=false
+      data.save()
+      
       return response.send({ success: true });
     } catch (error) {
       console.log(error);

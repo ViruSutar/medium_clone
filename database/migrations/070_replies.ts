@@ -9,6 +9,7 @@ export default class Replies extends BaseSchema {
       table.text('reply')
       table.integer('comment_id').unsigned().notNullable()
       table.integer('user_id').unsigned().notNullable()
+      table.boolean('is_active').defaultTo(true)
 
       table.index(["comment_id"],"fk_replies_comment_idx")
       table.index(["user_id"], "fk_replies_user_idx");
