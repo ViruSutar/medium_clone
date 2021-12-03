@@ -40,7 +40,7 @@ export default class UsersController {
 
       await request.validate({
         schema: schema.create({
-          email: schema.string({}, [rules.email()]),  
+          email: schema.string({}, [rules.email()]),
           password: schema.string(),
         }),
       });
@@ -75,8 +75,8 @@ export default class UsersController {
     try {
       // TODO: articles written by this user and subscription model too
       let { user_id } = request.all();
-      let access= session.get('auth')
-       
+      let access = session.get("auth");
+
       let data = await Database.query()
         .select(Database.rawQuery("users.name,users.email"))
         .from("users")
