@@ -6,7 +6,7 @@ export default class ArticlesImages extends BaseSchema {
   public async up () {
     this.schema.createTable(this.tableName, (table) => {
       table.increments('id')
-      table.integer("article_id").unsigned().notNullable();
+      table.uuid("article_id").notNullable();
       table.string("image_link").nullable()
       table.boolean("is_cover").defaultTo(false)
 

@@ -6,11 +6,13 @@ export default class Bookmarks extends BaseSchema {
   public async up() {
     this.schema.createTable(this.tableName, (table) => {
       table.increments("id")
-      table.integer("user_id").unsigned().notNullable()
+      table.uuid("user_id").notNullable()
       table.string("bookmark_type").nullable() //this is the folders where user can create and categories bookmarks
-      table.integer("bookmark_id").unsigned().notNullable()
+      table.uuid("article_id").notNullable()
 
-      table.unique(["user_id", "bookmark_id"], "fk_bookmarks_combo_idx");
+      table.index(["user_id"], "fk_bookmarks_user_idx");
+      table.index([ "article_id"], "fk_bookmarks_article_idx");
+
 
       table
         .foreign("user_id", "fk_bookmarks_user_idx")
@@ -20,7 +22,7 @@ export default class Bookmarks extends BaseSchema {
         .onUpdate("no action");
 
       table
-        .foreign("bookmark_id", "fk_bookmarks_bookmark_idx")
+        .foreign("article_id", "fk_bookmarks_article_idx")
         .references("id")
         .inTable("articles")
         .onDelete("no action")

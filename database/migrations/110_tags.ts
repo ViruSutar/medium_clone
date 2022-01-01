@@ -1,14 +1,14 @@
 import BaseSchema from '@ioc:Adonis/Lucid/Schema'
 
-export default class ArticleSubCategories extends BaseSchema {
-  protected tableName = 'article_sub_categories'
+export default class Tags extends BaseSchema {
+  protected tableName = 'tags'
 
   public async up () {
     this.schema.createTable(this.tableName, (table) => {
-      table.increments('id')            
-      table.string('sub_categories').unique() 
-      table.boolean('is_active').defaultTo(true)
-
+      table.increments('id')
+      table.string('name').notNullable()
+      table.enum('status',["APPROVED","PENDING","REJECTED"])
+      table.bigInteger('used_in_articles_count')
 
       /**
        * Uses timestamptz for PostgreSQL and DATETIME2 for MSSQL

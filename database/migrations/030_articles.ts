@@ -1,3 +1,4 @@
+import Database from '@ioc:Adonis/Lucid/Database'
 import BaseSchema from '@ioc:Adonis/Lucid/Schema'
 
 
@@ -7,32 +8,24 @@ export default class Articles extends BaseSchema {
 
   public async up () {
     this.schema.createTable(this.tableName, (table) => {
-      table.increments('id').notNullable()
+      table.uuid('id').notNullable().unique().defaultTo(Database.knexRawQuery("(UUID())"))
       table.string('title',100).notNullable()
-      table.integer('user_id').unsigned().notNullable()
-      table.enum('article_categories', ["Health","Science", "Arts & Entertainment", "Programming","other"]).notNullable()
-      table.integer('sub_category_id').unsigned().notNullable()
+      table.string('author_id').notNullable()
+      table.integer('reading_time').notNullable()
+      table.boolean('is_private').defaultTo(0)
       table.text('content','longtext').notNullable()
       table.bigInteger('likes_count').defaultTo(0)
+      table.bigInteger('views').nullable()
       table.boolean('is_active').defaultTo(true)
 
-
-
-      table.index(["user_id"], "fk_article_users_idx");
+      table.index(["author_id"], "fk_article_author_idx");
 
       table
-      .foreign("user_id", "fk_articles_users_idx")
+      .foreign("author_id", "fk_articles_author_idx")
       .references("id")
       .inTable("users")
       .onDelete('no action')
       .onUpdate('no action')
-
-      table
-       .foreign("sub_category_id",'fk_sub_category_id_users_idx')
-       .references("id")
-       .inTable("article_sub_categories")
-       .onDelete("restrict")
-       .onUpdate("restrict");
 
       /**
        * Uses timestamptz for PostgreSQL and DATETIME2 for MSSQL

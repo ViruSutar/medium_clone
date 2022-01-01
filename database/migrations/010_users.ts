@@ -1,3 +1,4 @@
+import Database from '@ioc:Adonis/Lucid/Database'
 import BaseSchema from '@ioc:Adonis/Lucid/Schema'
 
 export default class Users extends BaseSchema {
@@ -6,15 +7,14 @@ export default class Users extends BaseSchema {
   //TODO: book mark array of ids
   public async up () {
     this.schema.createTable(this.tableName, (table) => {
-      table.increments('id').notNullable()
-      table.string('name').nullable()
+      table.uuid('id').unique().notNullable().defaultTo(Database.knexRawQuery("(UUID())")) 
+      table.string('name').notNullable()
       table.enum('role',['AUTHOR','READER','ADMIN']).defaultTo('READER')
-      table.integer('followers').defaultTo(0) //only authors will have followers
+      table.bigInteger('follower_count').defaultTo(0) //only authors will have followers
+      table.bigInteger('followee_count').defaultTo(0) //only authors will have followers
       table.boolean('is_active').defaultTo(true)
       table.string('email', 255).unique().notNullable()
       table.string('password', 180).notNullable()
-
-
 
       /**
        * Uses timestamptz for PostgreSQL and DATETIME2 for MSSQL
