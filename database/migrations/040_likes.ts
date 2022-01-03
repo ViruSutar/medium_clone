@@ -8,9 +8,8 @@ export default class Likes extends BaseSchema {
     // TODO: unique index query works from workbench but we need to find a way to insert that from here
     this.schema.createTable(this.tableName, (table) => {
       table.increments("like_id").notNullable();
-      table.integer("article_id").unsigned().notNullable();
-      table.integer("user_id").unsigned().notNullable();
-      table.boolean('is_active').defaultTo(true)
+      table.uuid("article_id").notNullable();
+      table.uuid("user_id").notNullable();
 
         // Database.rawQuery('create unique index  combo_usr_art_idx on likes(article_id, user_id)')
       // table.index(["article_id"], "fk_like_articles_idx");

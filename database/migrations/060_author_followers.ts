@@ -1,18 +1,18 @@
 import BaseSchema from "@ioc:Adonis/Lucid/Schema";
 
 export default class WriterFollowers extends BaseSchema {
-  protected tableName = "author_followers";
+  protected tableName = "followers";
 
   // TODO: when you create a user and if he becoms author push him into this table
   public async up() {
     this.schema.createTable(this.tableName, (table) => {
       table.increments("id");
-      table.integer("follower_id").unsigned().notNullable();
-      table.integer("author_id").unsigned().notNullable();
+      table.uuid("follower_id").notNullable();
+      table.uuid("followee").notNullable();
       table.boolean("is_active").defaultTo(true);
 
-      table.unique(["follower_id","author_id"], "fk_follower_author_idx");
-      // table.index(["author_id"], "fk_followee_id_idx");
+      table.unique(["follower_id","followee"], "fk_follower_followeex");
+      // table.index(["followee"], "fk_followee_id_idx");
 
       table
         .foreign("follower_id", "fk_follower_id_idx")
@@ -22,7 +22,7 @@ export default class WriterFollowers extends BaseSchema {
         .onUpdate("restrict");
 
       table
-        .foreign("author_id", "fk_author_id_idx")
+        .foreign("followee", "fk_followee_idx")
         .references("id")
         .inTable("users")
         .onDelete("restrict")
