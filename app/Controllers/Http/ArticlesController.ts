@@ -6,75 +6,27 @@ import { schema } from "@ioc:Adonis/Core/Validator";
 import ArticleSubCategory from "App/Models/ArticleSubCategory";
 import UserNotification from "App/Models/UserNotification";
 import ArticlesImage from "App/Models/ArticlesImage";
+import ArticleValidator from "App/Validators/ArticleValidator";
+import ArticleService from "App/Services/ArticleService";
 
 export default class ArticlesController {
   public async createArticle({ request, response }: HttpContextContract) {
     try {
       // TODO: multiple titles and images validation
-      // TODO: only one cover image 
-      let {
+      // TODO: only one cover image
+      let { title, content, images, user_id, article_tags } = request.all();
+
+      await request.validate(ArticleValidator.createArticle);
+
+      let article = await ArticleService.createArticle(
         title,
         content,
         images,
-        user_id,  
-        article_categories,
-        sub_category_id,
-      } = request.all();
-
-      await request.validate({
-        schema: schema.create({
-          title: schema.string(),
-          image: schema.array.optional().anyMembers(),
-          user_id: schema.number.optional(),
-          article_categories: schema.string(),
-          sub_category_id: schema.number(),
-        }),
-      });
-      let article = await Article.create({
-        title,
-        content,
         user_id,
-        article_categories,
-        sub_category_id,
-      });
-      
-      let articleId=article.id
-      
-      //feed data in user_notification_table
-      let user_ids = await Database.query()
-        .select(
-          Database.rawQuery(
-            "author_followers.follower_id  as followers, \
-            users.name as author"
-          )
-        )
-        .from("author_followers")
-        .leftJoin('users','users.id','=','author_followers.author_id')
-        .where("author_followers.author_id", user_id) //this user_id is author_id
+        article_tags
+      );
 
-     user_ids && user_ids.map(async (row) => {
-        let user_id = row.followers;
-        let author =row.author        
-        await UserNotification.create({
-          user_id,
-          message:author +" has uploaded article on "+ title
-        })        
-      });
-      
-
-      images && images.map((data)=>{
-        ArticlesImage.create({
-          article_id:articleId,
-          image_link:data.image_link,
-          is_cover:data.is_cover
-        })
-      })
-
-      
-
-      //   await  UserNotification.create({})
-
-      return response.send({ success: true, articleId: article.id });
+      return response.send({ success: true, articleId: article.articleId });
     } catch (error) {
       console.log(error);
       return response.send({ success: false, message: error });
@@ -83,105 +35,28 @@ export default class ArticlesController {
 
   public async listArticles({ request, response }: HttpContextContract) {
     try {
-
       let {
         limit,
         offset,
-        article_type,
-        sub_categories_id,
+        article_tag,
         sort_by_likes,
         sort_by_date,
         author_name,
       } = request.all();
 
-      let params = {};
-      let limitQuery = "";
-      let offsetQuery = "";
-      let typeQuery = "";
-      let subTypeQuery = "";
-      let authorNameQuery = "";
-      let orderByLikes = "";
-      let orderById = "Order By articles.id  desc ";
-      let orderByDate = " ";
+      let articles = await ArticleService.listArticles(
+        limit,
+        offset,
+        article_tag,
+        sort_by_likes,
+        sort_by_date,
+        author_name
+      );
 
-      if (limit != null && limit != "") {
-        limitQuery = " limit :limit";
-        params["limit"] = parseInt(limit);
-      }
-
-      if (limit != null && limit != "" && offset != null && offset != "") {
-        offsetQuery = " offset :offset";
-        params["offset"] = parseInt(offset);
-      }
-
-      if (article_type != null && article_type != "") {
-        typeQuery = " AND articles.article_type = :article_type  ";
-        params["article_type"] = article_type;
-      }
-
-      if (sub_categories_id != null && sub_categories_id != "") {
-        subTypeQuery = " AND articles.sub_category_id = :sub_categories_id  ";
-        params["sub_categories_id"] = sub_categories_id;
-      }
-
-      if (sort_by_likes != null && sort_by_likes != "") {
-        //use limit 5 to get top 5 trending articles
-        //  TODO: this query  should run only once a day so the we can set todays top 5 articles
-        orderById = "";
-        orderByLikes = " order by articles.likes_count desc ";
-      }
-
-      if (sort_by_date != null && sort_by_date != "") {
-        orderById = "";
-        orderByDate = " order by articles.created_at " + sort_by_date;
-      }
-
-      if (sort_by_likes && sort_by_date) {
-        return response.send({ message: "Select only one filter" });
-      }
-
-      if (author_name != null && author_name != "") {
-        params["author_name"] = author_name;
-        authorNameQuery = " AND users.name = :author_name ";
-      }
-
-      let [data, total] = await Promise.all([
-        Database.rawQuery(
-          'select users.name as author_name, articles.title,articles.id as article_id,articles.article_categories,article_sub_categories.sub_categories, \
-                    articles.sub_category_id as sub_type_id,articles.likes_count, DATE_FORMAT(articles.created_at,"%d/%m/%Y") as Date,\
-                    articles_images.image_link as image\
-                     from articles \
-                     left join article_sub_categories on article_sub_categories.id=articles.sub_category_id \
-                     left join users on users.id=articles.user_id \
-                     join articles_images on articles_images.article_id = articles.id and is_cover = 1\
-                     where articles.is_active=1 ' +
-            typeQuery +
-            subTypeQuery +
-            authorNameQuery +
-            orderById +
-            orderByLikes +
-            orderByDate +
-            limitQuery +
-            offsetQuery,
-          params
-        ),
-        Database.rawQuery(
-          "select count(distinct articles.id) as count \
-                     from articles \
-                     left join article_sub_categories on article_sub_categories.id=articles.sub_category_id \
-                     left join users on users.id=articles.user_id \
-                     join articles_images on articles_images.article_id = articles.id and is_cover = 1 \
-                     where articles.is_active=1" +
-            typeQuery +
-            subTypeQuery +
-            authorNameQuery,
-          params
-        ),
-      ]);
       return response.send({
         success: true,
-        Data: data[0],
-        total: total[0] ? total[0][0].count : 0,
+        Data: articles.data,
+        count: articles.total,
       });
     } catch (error) {
       console.log(error);
@@ -191,57 +66,13 @@ export default class ArticlesController {
 
   public async getArticleById({ request, response }: HttpContextContract) {
     try {
-      let { article_id,user_id } = request.all();
+      let { article_id } = request.all();
 
-      let userIdQuery=''
-      let params = {
-        article_id
-      }
-      await request.validate({
-        schema:schema.create({
-          article_id:schema.number(),
-          user_id:schema.number.optional()
-        })
-      })
- 
-      if(user_id) {
-       userIdQuery = 'and articles.user_id = :user_id '
-       params['user_id'] = user_id
-      }
-      let data = await Database.query()
-        .select(
-          Database.rawQuery(
-            "articles.title, \
-             users.name as author, \
-            article_sub_categories.sub_categories,\
-            articles.content, \
-           json_arrayagg(articles_images.image_link) as image_link, \
-            articles.likes_count"
-          )
-         
-        )
-        .from("articles")
-        .leftJoin("users", "users.id", "=", "articles.user_id")
-        .leftJoin(
-          "article_sub_categories",
-          "article_sub_categories.id",
-          "=",
-          "articles.sub_category_id"
-        )
-        .joinRaw(Database.rawQuery('join articles_images on articles_images.article_id = articles.id'))
-        .whereRaw(Database.rawQuery("articles.is_active = 1 AND  articles.id = :article_id "+userIdQuery,params))
-        .groupBy("articles.id")
-        .then((data)=>{
-          return data.map((row)=>{
-            let article = row
-            article.image_link= JSON.parse(article.image_link)
-            return article
-          })
-        })
+      let article = await ArticleService.getArticleById(article_id);
 
       return response.send({
         success: true,
-        Data: data[0] ? data[0] : "article not found",
+        Data: article.data,
       });
     } catch (error) {
       console.log(error);
@@ -251,39 +82,17 @@ export default class ArticlesController {
 
   public async updateArticle({ request, response }: HttpContextContract) {
     try {
-      // TODO: not tested
-      let {
+      // TODO: error handling not done
+      let { article_id, title, article_tags, images, content } = request.all();
+
+      let article = await ArticleService.updateArticle(
         article_id,
         title,
+        article_tags,
         images,
-        content,
-        user_id,
-        article_categories,
-        sub_category_id,
-      } = request.all();
+        content
+      );
 
-      let article = await Article.findByOrFail("id", article_id);
-
-      if (images) 
-      {
-        await ArticlesImage.query().where('article_id',article_id).delete()
-
-        images.map((data)=>{
-        ArticlesImage.create({
-          article_id:article_id,
-          image_link:data.image_link,
-          is_cover:data.is_cover
-        })
-      })
-    }
-
-      if (title) article.title = title;
-      if (content) article.content = content;
-      if (user_id) article.user_id = user_id;
-      if (article_categories) article.article_categories = article_categories;
-      if (sub_category_id) article.sub_category_id = sub_category_id;
-
-      article.save();
       return response.send({ success: true });
     } catch (error) {
       console.log(error);
