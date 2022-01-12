@@ -6,7 +6,7 @@ export default class ArticleTags extends BaseSchema {
   public async up() {
     this.schema.createTable(this.tableName, (table) => {
       table.increments("id");
-      table.string("tag");
+      table.integer("tag_id").notNullable().unsigned();
       table.integer('article_id').notNullable().unsigned()
 
 
@@ -18,6 +18,16 @@ export default class ArticleTags extends BaseSchema {
         .inTable("articles")
         .onDelete("restrict") 
         .onUpdate("restrict");
+
+
+        table.index(["tag_id"], "fk_tag_idx");
+
+        table
+          .foreign("tag_id", "fk_tag_idx")
+          .references("id")
+          .inTable("tags")
+          .onDelete("restrict") 
+          .onUpdate("restrict");
 
       /**
        * Uses timestamptz for PostgreSQL and DATETIME2 for MSSQL

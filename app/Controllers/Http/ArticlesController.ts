@@ -8,99 +8,134 @@ import UserNotification from "App/Models/UserNotification";
 import ArticlesImage from "App/Models/ArticlesImage";
 import ArticleValidator from "App/Validators/ArticleValidator";
 import ArticleService from "App/Services/ArticleService";
+import DraftService from "App/Services/DraftService";
 
 export default class ArticlesController {
   public async createArticle({ request, response }: HttpContextContract) {
-    try {
-      // TODO: multiple titles and images validation
-      // TODO: only one cover image
-      let { title, content, images, user_id, article_tags } = request.all();
+    let { title, content, images, author_id, tags } = request.all();
 
-      await request.validate(ArticleValidator.createArticle);
+    await request.validate(ArticleValidator.createArticle);
 
-      let article = await ArticleService.createArticle(
-        title,
-        content,
-        images,
-        user_id,
-        article_tags
-      );
-
-      return response.send({ success: true, articleId: article.articleId });
-    } catch (error) {
-      console.log(error);
-      return response.send({ success: false, message: error });
-    }
+    let article = await ArticleService.createArticle(
+      title,
+      content,
+      images,
+      author_id,
+      tags
+    );
+    return response.send({ success: true, articleId: article.articleId });
   }
 
   public async listArticles({ request, response }: HttpContextContract) {
-    try {
-      let {
-        limit,
-        offset,
-        article_tag,
-        sort_by_likes,
-        sort_by_date,
-        author_name,
-      } = request.all();
+    let {
+      limit,
+      offset,
+      article_tag,
+      sort_by_likes,
+      sort_by_date,
+      author_name,
+    } = request.all();
 
-      let articles = await ArticleService.listArticles(
-        limit,
-        offset,
-        article_tag,
-        sort_by_likes,
-        sort_by_date,
-        author_name
-      );
+    let articles = await ArticleService.listArticles(
+      limit,
+      offset,
+      article_tag,
+      sort_by_likes,
+      sort_by_date,
+      author_name
+    );
 
-      return response.send({
-        success: true,
-        Data: articles.data,
-        count: articles.total,
-      });
-    } catch (error) {
-      console.log(error);
-      return response.send({ success: false, message: error });
-    }
+    return response.send({
+      success: true,
+      Data: articles.data,
+      count: articles.total,
+    });
   }
 
   public async getArticleById({ request, response }: HttpContextContract) {
-    try {
-      let { article_id } = request.all();
+    let { article_id } = request.all();
 
-      let article = await ArticleService.getArticleById(article_id);
+    await request.validate(ArticleValidator.getArticleById);
+    let article = await ArticleService.getArticleById(article_id);
 
-      return response.send({
-        success: true,
-        Data: article.data,
-      });
-    } catch (error) {
-      console.log(error);
-      return response.send({ success: false, message: error });
-    }
+    return response.send({
+      success: true,
+      Data: article.data,
+    });
   }
 
   public async updateArticle({ request, response }: HttpContextContract) {
-    try {
-      // TODO: error handling not done
-      let { article_id, title, article_tags, images, content } = request.all();
+    let { article_id, title, article_tags, images, content } = request.all();
 
-      let article = await ArticleService.updateArticle(
-        article_id,
-        title,
-        article_tags,
-        images,
-        content
-      );
-
-      return response.send({ success: true });
-    } catch (error) {
-      console.log(error);
-      return response.send({ success: false, message: error });
+    let article = await ArticleService.updateArticle(
+      article_id,
+      title,
+      article_tags,
+      images,
+      content
+    );
+    if (article?.success === false) {
+      return response
+        .status(404)
+        .send({ success: false, message: article.message });
     }
+    return response.send({ success: true });
   }
 
-  //SubCategories
+  // TODO: use those practices in your project
+  public async deleteArticle({ request, response }) {
+    let { article_id } = request.all();
+
+    await request.validate(ArticleValidator.updateArticle);
+
+    let article = await ArticleService.deleteArticle(article_id);
+
+    if (article?.success === false) {
+      return response
+        .status(404)
+        .send({ success: false, message: article.message });
+    }
+
+    return response.send({ success: true });
+  }
+
+   ////**** Drafts ****////
+
+  public async createDraft({request,response}){
+    let { title, content, images, author_id, tags } = request.all();
+
+    await request.validate(ArticleValidator.createArticle);
+
+    let article = await DraftService.createDraft(
+      title,
+      content,
+      images,
+      author_id,
+      tags
+    );
+    return response.send({ success: true, articleId: article.articleId });
+  }
+
+  public async listDrafts({request,response}){
+    let {
+      limit,
+      offset,
+      sort_by_date,
+    } = request.all();
+   
+    // only author should see this list
+    let articles = await DraftService.listDrafts(
+      limit,
+      offset,
+      sort_by_date,
+    );
+
+    return response.send({
+      success: true,
+      Data: articles.data,
+      count: articles.total,
+    });
+  }
 
   public async listSubCategories({ request, response }: HttpContextContract) {
     try {

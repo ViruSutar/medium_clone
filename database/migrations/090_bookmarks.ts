@@ -8,7 +8,7 @@ export default class Bookmarks extends BaseSchema {
       table.increments("id")
       table.uuid("user_id").notNullable()
       table.string("bookmark_type").nullable() //this is the folders where user can create and categories bookmarks
-      table.uuid("article_id").notNullable()
+      table.integer("article_id").notNullable().unsigned()
 
       table.index(["user_id"], "fk_bookmarks_user_idx");
       table.index([ "article_id"], "fk_bookmarks_article_idx");

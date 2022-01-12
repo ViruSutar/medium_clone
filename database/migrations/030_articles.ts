@@ -7,11 +7,12 @@ export default class Articles extends BaseSchema {
 
   public async up() {
     this.schema.createTable(this.tableName, (table) => {
-      table.uuid('id').notNullable().unique().defaultTo(Database.knexRawQuery("(UUID())"))
+      table.increments("id").notNullable();
       table.string('title',100).notNullable()
       table.string('author_id').notNullable()
       table.integer('reading_time').notNullable()
       table.boolean('is_private').defaultTo(0)
+      table.boolean('is_draft').defaultTo(0)
       table.text('content','longtext').notNullable()
       table.bigInteger('likes_count').defaultTo(0)
       table.bigInteger('views').nullable()

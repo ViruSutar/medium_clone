@@ -43,19 +43,27 @@ export default class ArticleValidator {
     schema: schema.create({
       title: schema.string(),
       image: schema.array.optional().anyMembers(),
-      user_id: schema.number.optional(),
-      article_tags: schema.array().anyMembers(),
+      author_id: schema.string.optional(),
+      tags: schema.array().anyMembers(),
     }),
-	messages:BaseValidator.messages
+    messages: BaseValidator.messages,
   };
 
   static updateArticle = {
     schema: schema.create({
+      article_id: schema.number(),
       title: schema.string.optional(),
       image: schema.array.optional().anyMembers(),
-      user_id: schema.number.optional(),
-      article_tags: schema.array.optional().anyMembers(),
+      author_id: schema.string.optional(),
+      tags: schema.array.optional().anyMembers(),
     }),
-	messages:BaseValidator.messages
+    messages: BaseValidator.messages,
+  };
+
+  static getArticleById = {
+    schema: schema.create({
+      article_id: schema.number(),
+    }),
+    messages: BaseValidator.messages,
   };
 }

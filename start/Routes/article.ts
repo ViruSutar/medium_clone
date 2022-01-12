@@ -1,10 +1,12 @@
 import Route from '@ioc:Adonis/Core/Route'
 
-Route.post('/createArticle','ArticlesController.createArticle')
-Route.get('/listArticles','ArticlesController.listArticles')
-Route.get('/getArticleById','ArticlesController.getArticleById')
-Route.post('/updateArticle','ArticlesController.updateArticle')
-Route.get('/listTopAuthors','ArticlesController.listTopAuthors')
+Route.post('articles/createArticle','ArticlesController.createArticle')
+Route.get('articles/listArticles','ArticlesController.listArticles')
+Route.get('articles/getArticleById','ArticlesController.getArticleById')
+Route.put('articles/updateArticle','ArticlesController.updateArticle')
+Route.get('articles/listTopAuthors','ArticlesController.listTopAuthors')
+Route.delete('articles/deleteArticle','ArticlesController.deleteArticle')
+
 
 
 

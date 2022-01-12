@@ -9,7 +9,7 @@ export default class Article extends BaseModel {
   public title: string;
 
   @column()
-  public user_id: number;
+  public author_id: number;
 
   @column()
   public article_tags: string;
@@ -20,6 +20,17 @@ export default class Article extends BaseModel {
   @column()
   public is_active: boolean;
 
+  @column()
+  public is_private: boolean;
+
+  @column()
+  public is_draft: boolean;
+
+  @column()
+  public likes_count:number;
+
+  @column()
+  public views: number;
 
   @column()
   public reading_time: number;

@@ -7,7 +7,7 @@ export default class Comments extends BaseSchema {
     this.schema.createTable(this.tableName, (table) => {
       table.increments("id").notNullable();
       table.uuid("user_id").notNullable();
-      table.uuid("article_id").notNullable();
+      table.integer("article_id").notNullable().unsigned();
       table.string("comment", 100).nullable();
       table.boolean('is_active').defaultTo(true)
 

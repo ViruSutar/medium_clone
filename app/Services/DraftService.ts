@@ -7,21 +7,17 @@ import ArticleTag from "App/Models/ArticleTag";
 import Tag from "App/Models/Tag";
 import UserNotification from "App/Models/UserNotification";
 import Tags from "Database/migrations/110_tags";
-import readingTime from "reading-time";
 
-class ArticleService {
+export default class DraftService {
   // TODO:create articles tags if at
-  static async createArticle(title, content, images, author_id, tags) {
-    let reading_time = readingTime(content);
-
+//   TODO: make auto save feature like hash node
+  static async createDraft(title, content, images, author_id, tags) {
     let article = await Article.create({
       title,
       content,
       author_id: author_id,
-      reading_time:
-        Math.round(reading_time.minutes) === 0
-          ? 1
-          : Math.round(reading_time.minutes),
+      reading_time: 2,
+      is_draft:true
     });
     let articleId = article.id;
 
@@ -48,20 +44,14 @@ class ArticleService {
       articleId: article.id,
     };
   }
-
-  static async listArticles(
+    // only author should see this list
+  static async listDrafts(
     limit,
     offset,
-    article_tag,
-    sort_by_likes,
     sort_by_date,
-    author_name
   ) {
     let limitQuery = "";
     let offsetQuery = "";
-    let tagQuery = "";
-    let authorNameQuery = "";
-    let orderByLikes = "";
     let orderById = "Order By articles.id  desc ";
     let orderByDate = " ";
     let params = {};
@@ -76,48 +66,26 @@ class ArticleService {
       params["offset"] = parseInt(offset);
     }
 
-    if (article_tag) {
-      tagQuery = " AND tags.name = :article_tag  ";
-      params["article_tag"] = article_tag;
-    }
-
-    if (sort_by_likes != null && sort_by_likes != "") {
-      //use limit 5 to get top 5 trending articles
-      //  TODO: this query  should run only once a day so the we can set todays top 5 articles
-      orderById = "";
-      orderByLikes = " order by articles.likes_count desc ";
-    }
-
     if (sort_by_date != null && sort_by_date != "") {
       orderById = "";
       orderByDate = " order by articles.created_at " + sort_by_date;
     }
 
-    if (sort_by_likes && sort_by_date) {
-      return { message: "Select only one filter" };
-    }
 
-    if (author_name != null && author_name != "") {
-      params["author_name"] = author_name;
-      authorNameQuery = " AND users.name = :author_name ";
-    }
-
+  
     let [data, total] = await Promise.all([
       Database.rawQuery(
         'select users.name as author_name, articles.title,articles.id as article_id, \
                     articles.likes_count, DATE_FORMAT(articles.created_at,"%d/%m/%Y") as Date,\
-                    articles_images.image_link as image,tags.name as tag_name,articles.reading_time\
+                    articles_images.image_link as image,tags.name as tag_name\
                      from articles \
                      join users on users.id=articles.author_id \
                      join articles_images on articles_images.article_id = articles.id and is_cover = 1\
                      left join  article_tags on  article_tags.article_id = articles.id\
-                     left join tags on tags.id =  article_tags.tag_id  where articles.is_active = 1 AND articles.is_draft = 0 \
+                     left join tags on tags.id =  article_tags.tag_id  where articles.is_active = 1 \
                       ' +
-          tagQuery +
-          authorNameQuery +
           " group by articles.id " +
           orderById +
-          orderByLikes +
           orderByDate +
           limitQuery +
           offsetQuery,
@@ -130,9 +98,8 @@ class ArticleService {
                      join articles_images on articles_images.article_id = articles.id and is_cover = 1 \
                      left join  article_tags on  article_tags.article_id = articles.id\
                      left join tags on tags.id =  article_tags.tag_id \
-                     where articles.is_active=1 AND articles.is_draft = 0" +
-          tagQuery +
-          authorNameQuery,
+                     where articles.is_active=1"
+          ,
         params
       ),
     ]);
@@ -142,7 +109,7 @@ class ArticleService {
     };
   }
 
-  static async getArticleById(article_id) {
+  static async getDraftById(article_id) {
     let params = {
       article_id,
     };
@@ -154,7 +121,7 @@ class ArticleService {
              users.name as author, \
             articles.content, \
            json_arrayagg(json_object('image_link',`articles_images`.`image_link`,'id',`articles_images`.`id`)) as image_link, \
-           articles.likes_count,json_arrayagg(json_object('name',`tags`.`name`,'id',`tags`.`id`)) as tags,articles.reading_time"
+           articles.likes_count,json_arrayagg(json_object('name',`tags`.`name`,'id',`tags`.`id`)) as tags"
         )
       )
       .from("articles")
@@ -168,7 +135,7 @@ class ArticleService {
       )
       .whereRaw(
         Database.rawQuery(
-          "articles.is_active = 1 AND articles.is_draft = 0 AND  articles.id = :article_id ",
+          "articles.is_active = 1 AND  articles.id = :article_id ",
           params
         )
       )
@@ -267,4 +234,3 @@ class ArticleService {
   }
 }
 
-export default ArticleService;

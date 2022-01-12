@@ -7,13 +7,12 @@ export default class Likes extends BaseSchema {
   public async up() {
     // TODO: unique index query works from workbench but we need to find a way to insert that from here
     this.schema.createTable(this.tableName, (table) => {
-      table.increments("like_id").notNullable();
-      table.uuid("article_id").notNullable();
+      table.increments("id").notNullable();
+      table.integer("article_id").notNullable().unsigned();
       table.uuid("user_id").notNullable();
 
         // Database.rawQuery('create unique index  combo_usr_art_idx on likes(article_id, user_id)')
-      // table.index(["article_id"], "fk_like_articles_idx");
-      // table.index(["user_id"], "fk_like_users_idx");
+      table.unique(['article_id', 'user_id'], 'fk_likes_combo_idx')
  
       // table.queryContext('ALTER TABLE likes ADD CONSTRAINT likes UNIQUE(article_id, user_id)')
       // table.queryContext('create unique index  combo_usr_art_idx on likes(article_id, user_id) ')
@@ -21,14 +20,14 @@ export default class Likes extends BaseSchema {
 
 
       table
-        .foreign("article_id", "fk_articles_idx")
+        .foreign("article_id", "fk_likes_article_idx")
         .references("id")
         .inTable("articles")
         .onDelete("restrict")
         .onUpdate("restrict");
 
       table
-        .foreign("user_id", "fk_users_idx")
+        .foreign("user_id", "fk_likes_user_idx")
         .references("id")
         .inTable("users")
         .onDelete("restrict")
