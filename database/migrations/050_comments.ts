@@ -24,7 +24,7 @@ export default class Comments extends BaseSchema {
 
       table
         .foreign("user_id", "fk_comment_users_idx")
-        .references("id")
+        .references("uuid")
         .inTable("users")
         .onDelete("restrict")
         .onUpdate("restrict");

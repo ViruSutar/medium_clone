@@ -28,7 +28,7 @@ export default class Likes extends BaseSchema {
 
       table
         .foreign("user_id", "fk_likes_user_idx")
-        .references("id")
+        .references("uuid")
         .inTable("users")
         .onDelete("restrict")
         .onUpdate("restrict");

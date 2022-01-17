@@ -19,7 +19,7 @@ export default class UserNotifications extends BaseSchema {
 
       table
         .foreign("to","fk_user_notification_tox")
-        .references("id")
+        .references("uuid")
         .inTable("users")
         .onDelete('no action')
         .onUpdate('no action')

@@ -12,18 +12,18 @@ export default class WriterFollowers extends BaseSchema {
       table.boolean("is_active").defaultTo(true);
 
       table.unique(["follower_id","followee"], "fk_follower_followeex");
-      // table.index(["followee"], "fk_followee_id_idx");
+      table.index(["followee"], "fk_followee_id_idx");
 
       table
         .foreign("follower_id", "fk_follower_id_idx")
-        .references("id")
+        .references("uuid")
         .inTable("users")
         .onDelete("restrict")
         .onUpdate("restrict");
 
       table
         .foreign("followee", "fk_followee_idx")
-        .references("id")
+        .references("uuid")
         .inTable("users")
         .onDelete("restrict")
         .onUpdate("restrict");

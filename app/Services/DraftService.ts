@@ -109,7 +109,7 @@ export default class DraftService {
     };
   }
 
-  static async getDraftById(article_id) {
+  static async getDraftDetails(article_id) {
     let params = {
       article_id,
     };
@@ -186,7 +186,7 @@ export default class DraftService {
     };
   }
 
-  static async updateArticle(article_id, title, article_tags, images, content) {
+  static async updateDraft(article_id, title, article_tags, images, content) {
     let article = await Article.find(article_id);
 
     if (!article) {
@@ -222,7 +222,7 @@ export default class DraftService {
     article.save();
   }
 
-  static async deleteArticle(article_id) {
+  static async deleteDraft(article_id) {
     let article = await Article.find(article_id);
 
     if (!article) {

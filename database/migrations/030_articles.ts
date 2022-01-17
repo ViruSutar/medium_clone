@@ -22,7 +22,7 @@ export default class Articles extends BaseSchema {
 
       table
       .foreign("author_id", "fk_articles_author_idx")
-      .references("id")
+      .references("uuid")
       .inTable("users")
       .onDelete('no action')
       .onUpdate('no action')

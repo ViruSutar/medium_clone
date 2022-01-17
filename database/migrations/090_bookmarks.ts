@@ -16,7 +16,7 @@ export default class Bookmarks extends BaseSchema {
 
       table
         .foreign("user_id", "fk_bookmarks_user_idx")
-        .references("id")
+        .references("uuid")
         .inTable("users")
         .onDelete("no action")
         .onUpdate("no action");

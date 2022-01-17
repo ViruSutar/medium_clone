@@ -100,7 +100,8 @@ export default class ArticlesController {
   }
 
    ////**** Drafts ****////
-
+ 
+  //  TODO: need to add authentication so that only logged in user can see drafts 
   public async createDraft({request,response}){
     let { title, content, images, author_id, tags } = request.all();
 
@@ -135,6 +136,14 @@ export default class ArticlesController {
       Data: articles.data,
       count: articles.total,
     });
+  }
+
+  public async getDraftDetails({request,response}){
+   let {draft_id}=request.all()
+
+   let draft=await DraftService.getDraftDetails
+
+   
   }
 
   public async listSubCategories({ request, response }: HttpContextContract) {

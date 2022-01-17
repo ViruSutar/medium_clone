@@ -13,6 +13,11 @@ class ArticleService {
   // TODO:create articles tags if at
   static async createArticle(title, content, images, author_id, tags) {
     let reading_time = readingTime(content);
+    let value: number = 0;
+    
+    if (images.length >= 4) {
+      value = 1;
+    }
 
     let article = await Article.create({
       title,
@@ -21,7 +26,7 @@ class ArticleService {
       reading_time:
         Math.round(reading_time.minutes) === 0
           ? 1
-          : Math.round(reading_time.minutes),
+          : Math.round(reading_time.minutes) + value,
     });
     let articleId = article.id;
 
@@ -104,12 +109,12 @@ class ArticleService {
 
     let [data, total] = await Promise.all([
       Database.rawQuery(
-        'select users.name as author_name, articles.title,articles.id as article_id, \
-                    articles.likes_count, DATE_FORMAT(articles.created_at,"%d/%m/%Y") as Date,\
+        'select users.name as author_name, articles.title,articles.id as article_id,SUBSTRING(articles.content,1,200) as content,  \
+                    articles.likes_count,articles.comments_count, DATE_FORMAT(articles.created_at,"%d/%m/%Y") as Date,\
                     articles_images.image_link as image,tags.name as tag_name,articles.reading_time\
                      from articles \
-                     join users on users.id=articles.author_id \
-                     join articles_images on articles_images.article_id = articles.id and is_cover = 1\
+                     join users on users.uuid=articles.author_id \
+                     left join articles_images on articles_images.article_id = articles.id and is_cover = 1\
                      left join  article_tags on  article_tags.article_id = articles.id\
                      left join tags on tags.id =  article_tags.tag_id  where articles.is_active = 1 AND articles.is_draft = 0 \
                       ' +
@@ -126,8 +131,8 @@ class ArticleService {
       Database.rawQuery(
         "select count(distinct articles.id) as count \
                      from articles \
-                     left join users on users.id=articles.author_id \
-                     join articles_images on articles_images.article_id = articles.id and is_cover = 1 \
+                     join users on users.uuid=articles.author_id \
+                     left join articles_images on articles_images.article_id = articles.id and is_cover = 1 \
                      left join  article_tags on  article_tags.article_id = articles.id\
                      left join tags on tags.id =  article_tags.tag_id \
                      where articles.is_active=1 AND articles.is_draft = 0" +
@@ -137,7 +142,7 @@ class ArticleService {
       ),
     ]);
     return {
-      data: data[0],
+      data: data[0].length === 0 ? "article not found":data[0],
       total: total[0] ? total[0][0].count : 0,
     };
   }
@@ -158,7 +163,7 @@ class ArticleService {
         )
       )
       .from("articles")
-      .leftJoin("users", "users.id", "=", "articles.author_id")
+      .join("users", "users.uuid", "=", "articles.author_id")
       .leftJoin("article_tags", " article_tags.article_id", "=", "articles.id")
       .leftJoin("tags", "tags.id", "=", "article_tags.tag_id")
       .joinRaw(

@@ -3,83 +3,58 @@ import Database from "@ioc:Adonis/Lucid/Database";
 import Comment from "App/Models/Comment";
 import { schema } from "@ioc:Adonis/Core/Validator";
 import Reply from "App/Models/Reply";
+import CommentValidator from "App/Validators/CommentValidator";
+import CommentService from "App/Services/CommentService";
 
 export default class CommentsController {
   public async createComment({ request, response }: HttpContextContract) {
-    try {
-      let { user_id, article_id, comment } = request.all();
+    let { user_uuid, article_id, comment } = request.all();
 
-      await request.validate({
-        schema: schema.create({
-          user_id: schema.number(),
-          article_id: schema.number(),
-          comment: schema.string(),
-        }),
-      });
+    await request.validate(CommentValidator.addComment);
 
-     let data= await Comment.create({
-        user_id,
-        article_id,
-        comment,
-      });
+    let data = await CommentService.addComment(
+      user_uuid,
+      article_id,
+      comment
+    );
 
-      return response.send({ success: true,CommentId:data.id });
-    } catch (error) {
-      console.log(error);
-      return response.send({ success: false, message: error });
-    }
+    return response.send({ success: true});
   }
 
-  public async updateComment({request,response}){
-    try {
-      let {comment_id,comment}=request.all()
+  public async editComment({ request, response }) {
+      let { comment_id, comment } = request.all();
 
-      await request.validate({
-        schema:schema.create({
-          comment_id:schema.number(),
-          comment : schema.string.optional()
-        })
-      })
+      await request.validate(CommentValidator.editComment);
 
-      let data = await Comment.find(comment_id)
+      let data=await CommentService.editComment(comment_id,comment)
 
-      if(!data){
-        throw("comment not found")
+      if(data.success === false){
+        return response
+        .status(404)
+        .send({ success: false, message: data.message });
       }
        
-      if(comment) data.comment=comment
-      data.save()
-
       return response.send({ success: true });
-    } catch (error) {
-      console.log(error);
-      return response.send({ success: false, message: error });
-    }
   }
 
-  public async deleteComment({request,response}){
-    try {
-      let {comment_id}=request.all()
+  public async deleteComment({ request, response }) {
+      let { comment_id } = request.all();
 
-      let data = await Comment.find(comment_id)
+      await request.validate(CommentValidator.editComment)
 
-      if(!data){
-        throw("comment not found")
+      let data=await CommentService.deleteComment(comment_id)
+
+     if(data.success === false){
+        return response
+        .status(404)
+        .send({ success: false, message: data.message });
       }
-
-      data.is_active=false
-      data.save()
-      
       return response.send({ success: true });
-    } catch (error) {
-      console.log(error);
-      return response.send({ success: false, message: error });
-    }
   }
 
   public async listCommentsByArticleId({
     request,
-    response,
+    response
   }: HttpContextContract) {
     try {
       let { article_id, sort_by_date, limit, offset } = request.all();
@@ -104,7 +79,7 @@ export default class CommentsController {
         offset = 0;
       }
 
-      if (sort_by_date) {
+      if (sort_by_date) { 
         orderById = "";
         orderByDateQuery = " comments.created_at  " + sort_by_date;
       }
@@ -134,28 +109,14 @@ export default class CommentsController {
   }
 
   public async replyToComment({ request, response }: HttpContextContract) {
-    try {
-      let { comment_id, reply, user_id } = request.all();
+      let { comment_id, reply, user_uuid } = request.all();
 
-      await request.validate({
-        schema: schema.create({
-          comment_id: schema.number(),
-          user_id: schema.number(),
-          reply: schema.string(),
-        }),
-      });
+      await request.validate(CommentValidator.replyToComment);
 
-      await Reply.create({
-        comment_id,
-        user_id,
-        reply,
-      });
-
+     let data=await CommentService.
+     
       return response.send({ success: true });
-    } catch (error) {
-      console.log(error);
-      return response.send({ success: false, message: error });
-    }
+    
   }
 
   public async getCommentByIdWithReply({
