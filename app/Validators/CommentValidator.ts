@@ -39,7 +39,7 @@ export default class CommentValidator {
    */
   public messages = {};
 
-  static addComment = {
+  static writeComment = {
     schema: schema.create({
       user_uuid: schema.string(),
       article_id: schema.number(),
@@ -61,7 +61,8 @@ export default class CommentValidator {
 		  article_id:schema.number(),
 		  limit:schema.number.optional(),
 		  offset:schema.number.optional()
-	  })
+	  }),
+	  messages: BaseValidator.messages
   }
 
   static replyToComment = {
@@ -69,6 +70,7 @@ export default class CommentValidator {
 		comment_id:schema.number(), 
 		reply:schema.string(), 
 		user_uuid:schema.string()
-	  })
+	  }),
+	  messages: BaseValidator.messages
   }
 }

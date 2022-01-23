@@ -14,7 +14,7 @@ export default class Reply extends BaseModel {
 
 
   @column()
-  public user_id:number
+  public user_uuid:string
 
   @column.dateTime({ autoCreate: true })
   public createdAt: DateTime

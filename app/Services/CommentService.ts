@@ -3,7 +3,7 @@ import Comment from "App/Models/Comment";
 import Reply from "App/Models/Reply";
 
 export default class CommentService {
-  static async addComment(user_uuid, article_id, comment) {
+  static async writeComment(user_uuid, article_id, comment) {
     let data = await Comment.create({
       user_id: user_uuid,
       article_id,
@@ -66,26 +66,37 @@ export default class CommentService {
         "comments.id as comment_id",
         "comments.comment",
         "users.name",
-        Database.rawQuery("DATE_FORMAT(comments.created_at,'%d/%m/%Y') as Date")
+        Database.rawQuery("json_arrayagg(json_object('reply',replies.reply,'replier_name',replier_name.name)) as replies, DATE_FORMAT(comments.created_at,'%d/%m/%Y') as Date")
       )
       .from("comments")
-      .leftJoin("articles", "articles.id", "=", "comments.article_id")
-      .leftJoin("users", "users.id", "=", "comments.user_id")
+      .join("articles", "articles.id", "=", "comments.article_id")
+      .join("users", "users.uuid", "=", "comments.user_id")
+      .leftJoin("replies","replies.comment_id","=","comments.id")
+      .joinRaw(Database.rawQuery("left join users as replier_name on replier_name.uuid = replies.user_uuid"))
       .where("comments.article_id", article_id)
+      .where("comments.is_active", true)
       .orderByRaw(Database.rawQuery(orderById + orderByDateQuery))
+      .groupBy("comments.id")
       .limit(limitQuery)
-      .offset(parseInt(offset));
+      .offset(parseInt(offset)).then((data)=>{
+      return data.map((row)=>{
+        row.replies=JSON.parse(row.replies)
+        return row
+      })
+      })
 
     return { success: true, Data: data };
   }
 
-  public async replyToComment(comment_id, reply, user_uuid) {
+  // TODO: if i delete comment on which replies are so all the replies on will also get deleted 
+  // TODO: yes all the replies cn that comment should also get deleted
+  static async replyToComment(comment_id, reply, user_uuid) {
     await Reply.create({
       comment_id,
-      user_id: user_uuid,
+      user_uuid,
       reply,
     });
 
-    return { success: true};
+    return { success: true };
   }
 }

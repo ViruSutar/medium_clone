@@ -9,6 +9,7 @@ import ArticlesImage from "App/Models/ArticlesImage";
 import ArticleValidator from "App/Validators/ArticleValidator";
 import ArticleService from "App/Services/ArticleService";
 import DraftService from "App/Services/DraftService";
+import DraftValidator from "App/Validators/DraftValidator";
 
 export default class ArticlesController {
   public async createArticle({ request, response }: HttpContextContract) {
@@ -66,7 +67,7 @@ export default class ArticlesController {
 
   public async updateArticle({ request, response }: HttpContextContract) {
     let { article_id, title, article_tags, images, content } = request.all();
-
+    await request.validate(ArticleValidator.updateArticle);
     let article = await ArticleService.updateArticle(
       article_id,
       title,
@@ -96,16 +97,16 @@ export default class ArticlesController {
         .send({ success: false, message: article.message });
     }
 
-    return response.send({ success: true });
+    return response.status(200).send({ success: true });
   }
 
-   ////**** Drafts ****////
- 
-  //  TODO: need to add authentication so that only logged in user can see drafts 
-  public async createDraft({request,response}){
+  ////**** Drafts ****////
+
+  //  TODO: need to add authentication so that only logged in user can see drafts
+  public async createDraft({ request, response }) {
     let { title, content, images, author_id, tags } = request.all();
 
-    await request.validate(ArticleValidator.createArticle);
+    await request.validate(DraftValidator.createDraft);
 
     let article = await DraftService.createDraft(
       title,
@@ -114,36 +115,91 @@ export default class ArticlesController {
       author_id,
       tags
     );
-    return response.send({ success: true, articleId: article.articleId });
+    return response
+      .status(200)
+      .send({ success: true, draftId: article.articleId });
   }
 
-  public async listDrafts({request,response}){
-    let {
-      limit,
-      offset,
-      sort_by_date,
-    } = request.all();
-   
-    // only author should see this list
-    let articles = await DraftService.listDrafts(
-      limit,
-      offset,
-      sort_by_date,
-    );
+  public async listDrafts({ request, response }) {
+    let { limit, offset, sort_by_date } = request.all();
 
-    return response.send({
+    // only author should see this list
+    let articles = await DraftService.listDrafts(limit, offset, sort_by_date);
+
+    return response.status(200).send({
       success: true,
       Data: articles.data,
       count: articles.total,
     });
   }
 
-  public async getDraftDetails({request,response}){
-   let {draft_id}=request.all()
+  public async getDraftDetails({ request, response }) {
+    let { draft_id } = request.all();
 
-   let draft=await DraftService.getDraftDetails
+    await request.validate(DraftValidator.getDraftById);
+    let draft = await DraftService.getDraftDetails(draft_id);
 
-   
+    return response.status(200).send({
+      success: true,
+      Data: draft,
+    });
+  }
+
+  public async updateDraft({ request, response }) {
+    let { draft_id, title, tags, images, content, author_id } = request.all();
+    author_id = "24656fc9-cd4b-4d16-8775-65eb4388b626";
+    await request.validate(DraftValidator.updateDraft);
+
+    let draft = await DraftService.updateDraft(
+      draft_id,
+      title,
+      tags,
+      images,
+      content
+    );
+
+    if (draft?.success === false) {
+      return response
+        .status(404)
+        .send({ success: false, message: draft.message });
+    }
+
+    return response.status(200).send({
+      success: true,
+    });
+  }
+
+  public async deleteDraft({ request, response }) {
+    let { draft_id } = request.all();
+    await request.validate(DraftValidator.getDraftById);
+    let draft = await DraftService.deleteDraft(draft_id);
+
+    if (draft?.success === false) {
+      return response
+        .status(404)
+        .send({ success: false, message: draft.message });
+    }
+
+    return response.status(200).send({
+      success: true,
+    });
+  }
+
+  public async publishArticle({ request, response }) {
+    let { draft_id } = request.all();
+
+    let draft = await DraftService.publishArticle(draft_id);
+
+    if (draft?.success === false) {
+      return response
+        .status(404)
+        .send({ success: false, message: draft.message });
+    }
+
+    return response.status(200).send({
+      success: true,
+      articleId: draft.articleId,
+    });
   }
 
   public async listSubCategories({ request, response }: HttpContextContract) {

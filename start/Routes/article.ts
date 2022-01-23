@@ -10,11 +10,11 @@ Route.delete('articles/deleteArticle','ArticlesController.deleteArticle')
 
 
 
-//subCategories
-Route.get('/listSubCategories','ArticlesController.listSubCategories')
-Route.post('/createSubCategories','ArticlesController.createSubCategories')
-Route.put('/updateSubcategories','ArticlesController.updateSubcategories')
-Route.delete('/deleteSubcategories','ArticlesController.deleteSubcategories')
+// //subCategories
+// Route.get('/listSubCategories','ArticlesController.listSubCategories')
+// Route.post('/createSubCategories','ArticlesController.createSubCategories')
+// Route.put('/updateSubcategories','ArticlesController.updateSubcategories')
+// Route.delete('/deleteSubcategories','ArticlesController.deleteSubcategories')
 
 
 

@@ -10,14 +10,15 @@ import Tags from "Database/migrations/110_tags";
 
 export default class DraftService {
   // TODO:create articles tags if at
-//   TODO: make auto save feature like hash node
+  //   TODO: make auto save feature like hash node
+  // TODO: on hashnode it saves the page when u stop typing keep that in mind
   static async createDraft(title, content, images, author_id, tags) {
     let article = await Article.create({
       title,
       content,
       author_id: author_id,
       reading_time: 2,
-      is_draft:true
+      is_draft: true,
     });
     let articleId = article.id;
 
@@ -44,12 +45,8 @@ export default class DraftService {
       articleId: article.id,
     };
   }
-    // only author should see this list
-  static async listDrafts(
-    limit,
-    offset,
-    sort_by_date,
-  ) {
+  // only author should see this list
+  static async listDrafts(limit, offset, sort_by_date) {
     let limitQuery = "";
     let offsetQuery = "";
     let orderById = "Order By articles.id  desc ";
@@ -71,18 +68,16 @@ export default class DraftService {
       orderByDate = " order by articles.created_at " + sort_by_date;
     }
 
-
-  
     let [data, total] = await Promise.all([
       Database.rawQuery(
-        'select users.name as author_name, articles.title,articles.id as article_id, \
+        'select users.name as author_name, articles.title,articles.id as article_id,SUBSTRING(articles.content,1,200) as content, \
                     articles.likes_count, DATE_FORMAT(articles.created_at,"%d/%m/%Y") as Date,\
                     articles_images.image_link as image,tags.name as tag_name\
                      from articles \
-                     join users on users.id=articles.author_id \
-                     join articles_images on articles_images.article_id = articles.id and is_cover = 1\
+                     join users on users.uuid=articles.author_id \
+                     left join articles_images on articles_images.article_id = articles.id and is_cover = 1\
                      left join  article_tags on  article_tags.article_id = articles.id\
-                     left join tags on tags.id =  article_tags.tag_id  where articles.is_active = 1 \
+                     left join tags on tags.id =  article_tags.tag_id  where articles.is_active = 1 AND articles.is_draft = true \
                       ' +
           " group by articles.id " +
           orderById +
@@ -94,17 +89,16 @@ export default class DraftService {
       Database.rawQuery(
         "select count(distinct articles.id) as count \
                      from articles \
-                     left join users on users.id=articles.author_id \
-                     join articles_images on articles_images.article_id = articles.id and is_cover = 1 \
+                     join users on users.uuid=articles.author_id \
+                     left join articles_images on articles_images.article_id = articles.id and is_cover = 1 \
                      left join  article_tags on  article_tags.article_id = articles.id\
                      left join tags on tags.id =  article_tags.tag_id \
-                     where articles.is_active=1"
-          ,
+                     where articles.is_active=1  AND articles.is_draft = true ",
         params
       ),
     ]);
     return {
-      data: data[0],
+      data: data[0].length == 0 ? "You do not have any drafts yet" : data[0],
       total: total[0] ? total[0][0].count : 0,
     };
   }
@@ -125,7 +119,7 @@ export default class DraftService {
         )
       )
       .from("articles")
-      .leftJoin("users", "users.id", "=", "articles.author_id")
+      .leftJoin("users", "users.uuid", "=", "articles.author_id")
       .leftJoin("article_tags", " article_tags.article_id", "=", "articles.id")
       .leftJoin("tags", "tags.id", "=", "article_tags.tag_id")
       .joinRaw(
@@ -135,7 +129,7 @@ export default class DraftService {
       )
       .whereRaw(
         Database.rawQuery(
-          "articles.is_active = 1 AND  articles.id = :article_id ",
+          "articles.is_active = 1 AND  articles.id = :article_id AND articles.is_draft = true ",
           params
         )
       )
@@ -182,23 +176,27 @@ export default class DraftService {
       });
 
     return {
-      data: data[0] ? data[0] : "article not found",
+      data: data[0] ? data[0] : "draft not found",
     };
   }
 
-  static async updateDraft(article_id, title, article_tags, images, content) {
-    let article = await Article.find(article_id);
+  static async updateDraft(draft_id, title, article_tags, images, content) {
+    let article = await Article.find(draft_id);
 
     if (!article) {
-      return { success: false, message: " article not found " };
+      return { success: false, message: " draft not found " };
+    }
+
+    if (article.is_draft != true) {
+      return { success: false, message: "you cannot update this draft" };
     }
 
     if (images) {
-      await ArticlesImage.query().where("article_id", article_id).delete();
+      await ArticlesImage.query().where("article_id", draft_id).delete();
 
       images.map((data) => {
         ArticlesImage.create({
-          article_id: article_id,
+          article_id: draft_id,
           image_link: data.image_link,
           is_cover: data.is_cover,
         });
@@ -206,7 +204,7 @@ export default class DraftService {
     }
 
     if (article_tags) {
-      await ArticleTag.query().where({ article_id }).delete();
+      await ArticleTag.query().where({ draft_id }).delete();
 
       article_tags.map(async (data) => {
         await ArticleTag.create({
@@ -226,11 +224,30 @@ export default class DraftService {
     let article = await Article.find(article_id);
 
     if (!article) {
-      return { success: false, message: " article not found " };
+      return { success: false, message: "draft not found" };
     }
 
-    article.is_active = false;
+    if (article.is_draft != true) {
+      return { success: false, message: "This is not draft" };
+    }
+
+    article.delete();
+  }
+
+  static async publishArticle(draft_id) {
+    let article = await Article.find(draft_id);
+    let tags = await ArticleTag.findBy("article_id", draft_id);
+
+    if (!article) {
+      return { success: false, message: "draft not found" };
+    }
+    if (article?.title === null || article?.content === null || tags === null) {
+      return { success: false, message: "fields are empty" };
+    }
+
+    article.is_draft = false;
     article.save();
+
+    return { success: true, articleId: article.id };
   }
 }
-

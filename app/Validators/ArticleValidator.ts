@@ -42,9 +42,10 @@ export default class ArticleValidator {
   static createArticle = {
     schema: schema.create({
       title: schema.string(),
-      image: schema.array.optional().anyMembers(),
-      author_id: schema.string.optional(),
+      images: schema.array.optional().anyMembers(),
+      author_id: schema.string(),
       tags: schema.array().anyMembers(),
+      content:schema.string.optional()
     }),
     messages: BaseValidator.messages,
   };
@@ -53,9 +54,10 @@ export default class ArticleValidator {
     schema: schema.create({
       article_id: schema.number(),
       title: schema.string.optional(),
-      image: schema.array.optional().anyMembers(),
+      images: schema.array.optional().anyMembers(),
       author_id: schema.string.optional(),
       tags: schema.array.optional().anyMembers(),
+      content:schema.string.optional()
     }),
     messages: BaseValidator.messages,
   };
