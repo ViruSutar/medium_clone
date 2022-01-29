@@ -25,6 +25,8 @@ import './Routes/comment'
 import './Routes/authorfollowers'
 import './Routes/user'
 import './Routes/draft'
+import './Routes/bookmark'
+
 
 
 Route.get('/', async () => {
