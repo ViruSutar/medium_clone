@@ -37,11 +37,17 @@ export default class ExceptionHandler extends HttpExceptionHandler {
         .status(400)
         .send({ success: false, message: error.messages.errors[0].message });
     }
+  
+    if (error.code === "ER_ROW_IS_REFERENCED_2") {
+      return ctx.response
+        .status(400)
+        .send({ success: false, message: error.sqlMessage });
+    }
 
     if (error.message === "jwt expired") {
       return ctx.response
         .status(400)
-        .send({ success: false, message: 'token expired please login again' });
+        .send({ success: false, message: "token expired please login again" });
     }
 
     return ctx.response.status(400).send({ success: false, message: error });

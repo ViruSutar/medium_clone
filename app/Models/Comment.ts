@@ -6,7 +6,7 @@ export default class Comment extends BaseModel {
   public id: number
 
   @column()
-  public user_id:number
+  public user_id:string
 
   
   @column()

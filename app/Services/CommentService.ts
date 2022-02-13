@@ -13,12 +13,15 @@ export default class CommentService {
     return { success: true, CommentId: data.id };
   }
 
-  //   TODO: authentication required
-  static async editComment(comment_id, comment) {
+  static async editComment(comment_id, comment, user_uuid) {
     let data = await Comment.find(comment_id);
 
     if (!data) {
       return { success: false, message: "comment not found" };
+    }
+
+    if (data.user_id !== user_uuid) {
+      return { success: false, message: "You do not have this permission" };
     }
 
     if (comment) data.comment = comment;
@@ -27,13 +30,17 @@ export default class CommentService {
     return { success: true, message: "comment edited successfully" };
   }
 
-  //   TODO: authentication required
-  static async deleteComment(comment_id) {
+  static async deleteComment(comment_id, user_uuid) {
     let data = await Comment.find(comment_id);
 
     if (!data) {
       return { success: false, message: "comment not found" };
     }
+
+    if (data.user_id !== user_uuid) {
+      return { success: false, message: "You do not have this permission" };
+    }
+
     data.is_active = false;
     data.save();
 
@@ -66,29 +73,36 @@ export default class CommentService {
         "comments.id as comment_id",
         "comments.comment",
         "users.name",
-        Database.rawQuery("json_arrayagg(json_object('reply',replies.reply,'replier_name',replier_name.name)) as replies, DATE_FORMAT(comments.created_at,'%d/%m/%Y') as Date")
+        Database.rawQuery(
+          "json_arrayagg(json_object('reply',replies.reply,'replier_name',replier_name.name)) as replies, DATE_FORMAT(comments.created_at,'%d/%m/%Y') as Date"
+        )
       )
       .from("comments")
       .join("articles", "articles.id", "=", "comments.article_id")
       .join("users", "users.uuid", "=", "comments.user_id")
-      .leftJoin("replies","replies.comment_id","=","comments.id")
-      .joinRaw(Database.rawQuery("left join users as replier_name on replier_name.uuid = replies.user_uuid"))
+      .leftJoin("replies", "replies.comment_id", "=", "comments.id")
+      .joinRaw(
+        Database.rawQuery(
+          "left join users as replier_name on replier_name.uuid = replies.user_uuid"
+        )
+      )
       .where("comments.article_id", article_id)
       .where("comments.is_active", true)
       .orderByRaw(Database.rawQuery(orderById + orderByDateQuery))
       .groupBy("comments.id")
       .limit(limitQuery)
-      .offset(parseInt(offset)).then((data)=>{
-      return data.map((row)=>{
-        row.replies=JSON.parse(row.replies)
-        return row
-      })
-      })
+      .offset(parseInt(offset))
+      .then((data) => {
+        return data.map((row) => {
+          row.replies = JSON.parse(row.replies);
+          return row;
+        });
+      });
 
     return { success: true, Data: data };
   }
 
-  // TODO: if i delete comment on which replies are so all the replies on will also get deleted 
+  // TODO: if i delete comment on which replies are so all the replies on will also get deleted
   // TODO: yes all the replies cn that comment should also get deleted
   static async replyToComment(comment_id, reply, user_uuid) {
     await Reply.create({

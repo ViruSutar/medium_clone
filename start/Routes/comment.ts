@@ -1,10 +1,10 @@
 import Route from '@ioc:Adonis/Core/Route'
 
 
-Route.post('comment/writeComment','CommentsController.writeComment')
+Route.post('comment/create','CommentsController.writeComment').middleware('checkAccess')
 Route.get('comment/listCommentsByArticleId','CommentsController.listCommentsByArticleId')
-Route.put('comment/updateComment','CommentsController.updateComment')
-Route.delete('comment/deleteComment','CommentsController.deleteComment')
+Route.put('comment/update','CommentsController.editComment').middleware('checkAccess')
+Route.delete('comment/delete','CommentsController.deleteComment').middleware('checkAccess')
 
 
 

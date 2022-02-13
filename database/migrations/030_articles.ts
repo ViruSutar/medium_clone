@@ -26,6 +26,7 @@ export default class Articles extends BaseSchema {
       .inTable("users")
       .onDelete('no action')
       .onUpdate('no action')
+      
 
       /**
        * Uses timestamptz for PostgreSQL and DATETIME2 for MSSQL

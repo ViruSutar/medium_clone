@@ -1,8 +1,8 @@
 import Route from '@ioc:Adonis/Core/Route'
 
-Route.post('drafts/create','ArticlesController.createDraft')
-Route.get('drafts/list','ArticlesController.listDrafts')
-Route.get('drafts/getdraft','ArticlesController.getDraftDetails')
-Route.put('drafts/update','ArticlesController.updateDraft')
-Route.delete('drafts/delete','ArticlesController.deleteDraft')
-Route.post('drafts/publish','ArticlesController.publishArticle')
+Route.post('drafts/create','ArticlesController.createDraft').middleware('checkAccess')
+Route.get('drafts/list','ArticlesController.listDrafts').middleware('checkAccess')
+Route.get('drafts/getdraft','ArticlesController.getDraftDetails').middleware('checkAccess')
+Route.put('drafts/update','ArticlesController.updateDraft').middleware('checkAccess')
+Route.delete('drafts/delete','ArticlesController.deleteDraft').middleware('checkAccess')
+Route.post('drafts/publish','ArticlesController.publishArticle').middleware('checkAccess')

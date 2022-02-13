@@ -45,12 +45,14 @@ export default class DraftService {
     };
   }
   // only author should see this list
-  static async listDrafts(limit, offset, sort_by_date) {
+  static async listDrafts(limit, offset, sort_by_date, user_uuid) {
     let limitQuery = "";
     let offsetQuery = "";
     let orderById = "Order By articles.id  desc ";
     let orderByDate = " ";
-    let params = {};
+    let params = {
+      user_uuid,
+    };
 
     if (limit != null && limit != "") {
       limitQuery = " limit :limit";
@@ -77,7 +79,7 @@ export default class DraftService {
                      left join articles_images on articles_images.article_id = articles.id and is_cover = 1\
                      left join  article_tags on  article_tags.article_id = articles.id\
                      left join tags on tags.id =  article_tags.tag_id  where articles.is_active = 1 AND articles.is_draft = true \
-                      ' +
+                      AND articles.author_id = :user_uuid' +
           " group by articles.id " +
           orderById +
           orderByDate +
@@ -92,7 +94,7 @@ export default class DraftService {
                      left join articles_images on articles_images.article_id = articles.id and is_cover = 1 \
                      left join  article_tags on  article_tags.article_id = articles.id\
                      left join tags on tags.id =  article_tags.tag_id \
-                     where articles.is_active=1  AND articles.is_draft = true ",
+                     where articles.is_active=1  AND articles.is_draft = true AND articles.author_id = :user_uuid ",
         params
       ),
     ]);
@@ -102,9 +104,10 @@ export default class DraftService {
     };
   }
 
-  static async getDraftDetails(article_id) {
+  static async getDraftDetails(article_id, user_uuid) {
     let params = {
       article_id,
+      user_uuid,
     };
 
     let data = await Database.query()
@@ -128,7 +131,7 @@ export default class DraftService {
       )
       .whereRaw(
         Database.rawQuery(
-          "articles.is_active = 1 AND  articles.id = :article_id AND articles.is_draft = true ",
+          "articles.is_active = 1 AND  articles.id = :article_id AND articles.is_draft = true AND articles.author_id = :user_uuid ",
           params
         )
       )
@@ -179,11 +182,22 @@ export default class DraftService {
     };
   }
 
-  static async updateDraft(draft_id, title, article_tags, images, content) {
+  static async updateDraft(
+    draft_id,
+    title,
+    article_tags,
+    images,
+    content,
+    user_uuid
+  ) {
     let article = await Article.find(draft_id);
 
     if (!article) {
       return { success: false, message: " draft not found " };
+    }
+
+    if (article.author_id !== user_uuid) {
+      return { success: false, message: "You do not have this permission" };
     }
 
     if (article.is_draft != true) {
@@ -219,27 +233,39 @@ export default class DraftService {
     article.save();
   }
 
-  static async deleteDraft(article_id) {
+  static async deleteDraft(article_id, user_uuid) {
     let article = await Article.find(article_id);
 
     if (!article) {
       return { success: false, message: "draft not found" };
     }
 
+    if (article.author_id !== user_uuid) {
+      return { success: false, message: "You do not have this permission" };
+    }
+
     if (article.is_draft != true) {
       return { success: false, message: "This is not draft" };
     }
-
-    article.delete();
+    
+    await ArticleTag.query().delete().where('article_id',article_id)
+    await ArticlesImage.query().delete().where('article_id',article_id)
+    article.delete()
+    article.save()
   }
 
-  static async publishArticle(draft_id) {
+  static async publishArticle(draft_id,user_uuid) {
     let article = await Article.find(draft_id);
     let tags = await ArticleTag.findBy("article_id", draft_id);
 
     if (!article) {
       return { success: false, message: "draft not found" };
     }
+
+    if (article.author_id !== user_uuid) {
+      return { success: false, message: "You do not have this permission" };
+    }
+
     if (article?.title === null || article?.content === null || tags === null) {
       return { success: false, message: "fields are empty" };
     }

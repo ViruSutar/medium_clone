@@ -7,8 +7,9 @@ import CommentValidator from "App/Validators/CommentValidator";
 import CommentService from "App/Services/CommentService";
 
 export default class CommentsController {
-  public async writeComment({ request, response }: HttpContextContract) {
-    let { user_uuid, article_id, comment } = request.all();
+  public async writeComment({ request, response }) {
+    let { article_id, comment } = request.all();
+    let user_uuid= request.user.user_uuid
 
     await request.validate(CommentValidator.writeComment);
 
@@ -18,15 +19,16 @@ export default class CommentsController {
       comment
     );
 
-    return response.send({ success: true });
+    return response.send({ success: true,commentId:data.CommentId });
   }
 
   public async editComment({ request, response }) {
     let { comment_id, comment } = request.all();
-
+    let user_uuid= request.user.user_uuid
+ 
     await request.validate(CommentValidator.editComment);
 
-    let data = await CommentService.editComment(comment_id, comment);
+    let data = await CommentService.editComment(comment_id, comment,user_uuid);
 
     if (data.success === false) {
       return response
@@ -39,10 +41,11 @@ export default class CommentsController {
 
   public async deleteComment({ request, response }) {
     let { comment_id } = request.all();
-
+    let user_uuid= request.user.user_uuid
+    
     await request.validate(CommentValidator.editComment);
 
-    let data = await CommentService.deleteComment(comment_id);
+    let data = await CommentService.deleteComment(comment_id,user_uuid);
 
     if (data.success === false) {
       return response

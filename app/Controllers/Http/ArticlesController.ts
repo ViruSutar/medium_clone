@@ -4,7 +4,6 @@ import Database from "@ioc:Adonis/Lucid/Database";
 import Article from "App/Models/Article";
 import { schema } from "@ioc:Adonis/Core/Validator";
 import ArticleSubCategory from "App/Models/ArticleSubCategory";
-import UserNotification from "App/Models/UserNotification";
 import ArticlesImage from "App/Models/ArticlesImage";
 import ArticleValidator from "App/Validators/ArticleValidator";
 import ArticleService from "App/Services/ArticleService";
@@ -12,6 +11,7 @@ import DraftService from "App/Services/DraftService";
 import DraftValidator from "App/Validators/DraftValidator";
 
 export default class ArticlesController {
+  // TODO: authentication remaining
   public async createArticle({ request, response }: HttpContextContract) {
     let { title, content, images, author_id, tags } = request.all();
 
@@ -104,15 +104,15 @@ export default class ArticlesController {
 
   //  TODO: need to add authentication so that only logged in user can see drafts
   public async createDraft({ request, response }) {
-    let { title, content, images, author_id, tags } = request.all();
-
+    let { title, content, images, tags } = request.all();
+    let user_uuid = request.user.user_uuid;
     await request.validate(DraftValidator.createDraft);
 
     let article = await DraftService.createDraft(
       title,
       content,
       images,
-      author_id,
+      user_uuid,
       tags
     );
     return response
@@ -122,9 +122,15 @@ export default class ArticlesController {
 
   public async listDrafts({ request, response }) {
     let { limit, offset, sort_by_date } = request.all();
+    let user_uuid = request.user.user_uuid;
 
     // only author should see this list
-    let articles = await DraftService.listDrafts(limit, offset, sort_by_date);
+    let articles = await DraftService.listDrafts(
+      limit,
+      offset,
+      sort_by_date,
+      user_uuid
+    );
 
     return response.status(200).send({
       success: true,
@@ -135,9 +141,10 @@ export default class ArticlesController {
 
   public async getDraftDetails({ request, response }) {
     let { draft_id } = request.all();
+    let user_uuid = request.user.user_uuid;
 
     await request.validate(DraftValidator.getDraftById);
-    let draft = await DraftService.getDraftDetails(draft_id);
+    let draft = await DraftService.getDraftDetails(draft_id, user_uuid);
 
     return response.status(200).send({
       success: true,
@@ -146,8 +153,9 @@ export default class ArticlesController {
   }
 
   public async updateDraft({ request, response }) {
-    let { draft_id, title, tags, images, content, author_id } = request.all();
-    author_id = "24656fc9-cd4b-4d16-8775-65eb4388b626";
+    let { draft_id, title, tags, images, content } = request.all();
+    let user_uuid = request.user.user_uuid;
+
     await request.validate(DraftValidator.updateDraft);
 
     let draft = await DraftService.updateDraft(
@@ -155,7 +163,8 @@ export default class ArticlesController {
       title,
       tags,
       images,
-      content
+      content,
+      user_uuid
     );
 
     if (draft?.success === false) {
@@ -171,8 +180,10 @@ export default class ArticlesController {
 
   public async deleteDraft({ request, response }) {
     let { draft_id } = request.all();
+    let user_uuid = request.user.user_uuid;
+
     await request.validate(DraftValidator.getDraftById);
-    let draft = await DraftService.deleteDraft(draft_id);
+    let draft = await DraftService.deleteDraft(draft_id, user_uuid);
 
     if (draft?.success === false) {
       return response
@@ -187,8 +198,9 @@ export default class ArticlesController {
 
   public async publishArticle({ request, response }) {
     let { draft_id } = request.all();
+    let user_uuid = request.user.user_uuid;
 
-    let draft = await DraftService.publishArticle(draft_id);
+    let draft = await DraftService.publishArticle(draft_id, user_uuid);
 
     if (draft?.success === false) {
       return response

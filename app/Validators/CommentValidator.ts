@@ -41,7 +41,6 @@ export default class CommentValidator {
 
   static writeComment = {
     schema: schema.create({
-      user_uuid: schema.string(),
       article_id: schema.number(),
       comment: schema.string(),
     }),

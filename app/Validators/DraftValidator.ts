@@ -45,7 +45,6 @@ export default class DraftValidator {
     schema: schema.create({
       title: schema.string.optional(),
       images: schema.array.optional().anyMembers(),
-      author_id: schema.string(),
       tags: schema.array.optional().anyMembers(),
       content:schema.string.optional()
     }),
@@ -57,7 +56,6 @@ export default class DraftValidator {
       draft_id: schema.number(),
       title: schema.string.optional(),
       images: schema.array.optional().anyMembers(),
-      author_id: schema.string(),
       tags: schema.array.optional().anyMembers(),
       content:schema.string.optional()
     }),
