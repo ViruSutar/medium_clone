@@ -5,7 +5,6 @@ import Article from "App/Models/Article";
 import ArticlesImage from "App/Models/ArticlesImage";
 import ArticleTag from "App/Models/ArticleTag";
 import Tag from "App/Models/Tag";
-import UserNotification from "App/Models/UserNotification";
 import Tags from "Database/migrations/110_tags";
 
 export default class DraftService {

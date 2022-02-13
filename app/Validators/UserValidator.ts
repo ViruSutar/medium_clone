@@ -1,7 +1,8 @@
-	import { schema } from '@ioc:Adonis/Core/Validator'
+import { schema,rules } from '@ioc:Adonis/Core/Validator'
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
+import BaseValidator from "./BaseValidator";
 
-export default class BaseValidator {
+export default class UserValidator {
   constructor (protected ctx: HttpContextContract) {
   }
 
@@ -38,10 +39,7 @@ export default class BaseValidator {
 	 * }
 	 *
 	 */
-  static messages = {
-	  '*':(field,rule)=>{
-		  return `${rule} validation error on ${field}`
-	  },
-	  required:'{{field}} is required'
-  }
+  public messages = {}
+
+  
 }

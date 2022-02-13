@@ -1,35 +1,30 @@
-import BaseSchema from '@ioc:Adonis/Lucid/Schema'
+import BaseSchema from "@ioc:Adonis/Lucid/Schema";
 
-export default class UserNotifications extends BaseSchema {
-  protected tableName = 'notifications'
+export default class Notifications extends BaseSchema {
+  protected tableName = "notifications";
 
-  public async up () {
+  public async up() {
     this.schema.createTable(this.tableName, (table) => {
-      table.increments('id')
-      table.uuid('to').notNullable()
-      table.string('message').nullable()
-      // table.enum('type',["reply","author"])
-      table.boolean("is_active").defaultTo(true);
-      
-
-     table.index(["to"],"fk_user_notification_tox")
-      /**
-       * Uses timestamptz for PostgreSQL and DATETIME2 for MSSQL
-       */
+      table.increments("id");
+      table.uuid("user_uuid").notNullable();
+      table.boolean('type').notNullable()
+      table.string("notification");
+ 
+      table.index(["user_uuid"], "fk_notification_user_uuid_idx");
 
       table
-        .foreign("to","fk_user_notification_tox")
+        .foreign("user_uuid", "fk_notification_to_idx")
         .references("uuid")
         .inTable("users")
-        .onDelete('no action')
-        .onUpdate('no action')
+        .onDelete("no action")
+        .onUpdate("no action");
 
-      table.timestamp('created_at', { useTz: true })
-      table.timestamp('updated_at', { useTz: true })
-    })
+      table.timestamp("created_at", { useTz: true });
+      table.timestamp("updated_at", { useTz: true });
+    });
   }
 
-  public async down () {
-    this.schema.dropTable(this.tableName)
+  public async down() {
+    this.schema.dropTable(this.tableName);
   }
 }

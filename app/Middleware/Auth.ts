@@ -72,5 +72,8 @@ export default class AuthMiddleware {
     const guards = customGuards.length ? customGuards : [auth.name]
     await this.authenticate(auth, guards)
     await next()
+
+
   }
+
 }

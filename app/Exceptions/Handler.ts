@@ -13,26 +13,37 @@
 |
 */
 
-import Logger from '@ioc:Adonis/Core/Logger'
-import HttpExceptionHandler from '@ioc:Adonis/Core/HttpExceptionHandler'
-import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
+import Logger from "@ioc:Adonis/Core/Logger";
+import HttpExceptionHandler from "@ioc:Adonis/Core/HttpExceptionHandler";
+import { HttpContextContract } from "@ioc:Adonis/Core/HttpContext";
+
+// TODO: check error handling of yatrikar api and implement
 
 export default class ExceptionHandler extends HttpExceptionHandler {
-  constructor () {
-    super(Logger)
+  constructor() {
+    super(Logger);
   }
- 
-  public async handle(error: any, ctx: HttpContextContract): Promise<any> {
-    
-      if(error.code === 'E_VALIDATION_FAILURE'){
-        return ctx.response.status(400).send({success:false, message:error.messages.errors[0].message})
 
+  public async handle(error: any, ctx: HttpContextContract): Promise<any> {
+    if (error.code === "E_VALIDATION_FAILURE") {
+      if (error.messages.errors[0].rule === "unique") {
+        return ctx.response.status(400).send({
+          success: false,
+          message: `user with ${error.messages.errors[0].field} already exist`,
+        });
       }
-   
-  
-      return ctx.response.status(400).send({success:false, message:error})
-      
-      }
-      
+
+      return ctx.response
+        .status(400)
+        .send({ success: false, message: error.messages.errors[0].message });
+    }
+
+    if (error.message === "jwt expired") {
+      return ctx.response
+        .status(400)
+        .send({ success: false, message: 'token expired please login again' });
+    }
+
+    return ctx.response.status(400).send({ success: false, message: error });
   }
-  
+}

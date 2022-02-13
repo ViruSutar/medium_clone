@@ -26,6 +26,10 @@ import './Routes/authorfollowers'
 import './Routes/user'
 import './Routes/draft'
 import './Routes/bookmark'
+import './Routes/notification'
+import './Routes/auth'
+
+
 
 
 

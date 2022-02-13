@@ -1,8 +1,7 @@
 import Route from '@ioc:Adonis/Core/Route'
 
 //User
-Route.get('getUserById','UsersController.getUserById').middleware('checkAccess:READER')
-Route.post('createUser','UsersController.createUser')
+Route.get('getUserById','UsersController.getUserById').middleware('checkAccess')
 
 
 //Notification
