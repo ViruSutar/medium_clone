@@ -13,7 +13,7 @@ class ArticleService {
   static async createArticle(title, content, images, author_id, tags) {
     let reading_time = readingTime(content);
     let value: number = 0;
-    
+
     if (images.length >= 4) {
       value = 1;
     }
@@ -141,7 +141,7 @@ class ArticleService {
       ),
     ]);
     return {
-      data: data[0].length === 0 ? "article not found":data[0],
+      data: data[0].length === 0 ? "article not found" : data[0],
       total: total[0] ? total[0][0].count : 0,
     };
   }
@@ -223,11 +223,22 @@ class ArticleService {
     };
   }
 
-  static async updateArticle(article_id, title, article_tags, images, content) {
+  static async updateArticle(
+    article_id,
+    title,
+    article_tags,
+    images,
+    content,
+    author_uuid
+  ) {
     let article = await Article.find(article_id);
 
     if (!article) {
       return { success: false, message: " article not found " };
+    }
+
+    if (author_uuid !== article.author_id) {
+      return { success: false, message: "you do not have this permission" };
     }
 
     if (images) {
@@ -259,15 +270,20 @@ class ArticleService {
     article.save();
   }
 
-  static async deleteArticle(article_id) {
+  static async deleteArticle(article_id, author_uuid) {
     let article = await Article.find(article_id);
 
     if (!article) {
       return { success: false, message: " article not found " };
     }
 
-    article.is_active = false;
-    article.save();
+    if (author_uuid !== article.author_id) {
+      return { success: false, message: "you do not have this permission" };
+    }
+    await ArticleTag.query().delete().where('article_id',article_id)
+    await ArticlesImage.query().delete().where('article_id',article_id)
+    article.delete()
+    article.save()
   }
 }
 

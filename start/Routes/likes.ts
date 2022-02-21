@@ -1,5 +1,5 @@
 import Route from '@ioc:Adonis/Core/Route'
 
 
-Route.post('/addLikeToArticle','LikesController.addLikeToArticle')
-Route.post('/removeLike','LikesController.removeLike')
+Route.post('like/add','LikesController.addLike').middleware('checkAccess')
+Route.delete('likes/remove','LikesController.removeLike').middleware('checkAccess')

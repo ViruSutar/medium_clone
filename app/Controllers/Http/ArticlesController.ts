@@ -1,5 +1,4 @@
 // import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
-import { HttpContextContract } from "@ioc:Adonis/Core/HttpContext";
 import Database from "@ioc:Adonis/Lucid/Database";
 import Article from "App/Models/Article";
 import { schema } from "@ioc:Adonis/Core/Validator";
@@ -11,9 +10,10 @@ import DraftService from "App/Services/DraftService";
 import DraftValidator from "App/Validators/DraftValidator";
 
 export default class ArticlesController {
-  // TODO: authentication remaining
-  public async createArticle({ request, response }: HttpContextContract) {
-    let { title, content, images, author_id, tags } = request.all();
+
+  public async createArticle({ request, response }) {
+    let { title, content, images,  tags } = request.all();
+    let author_uuid = request.user.user_uuid;
 
     await request.validate(ArticleValidator.createArticle);
 
@@ -21,13 +21,13 @@ export default class ArticlesController {
       title,
       content,
       images,
-      author_id,
+      author_uuid,
       tags
     );
     return response.send({ success: true, articleId: article.articleId });
   }
 
-  public async listArticles({ request, response }: HttpContextContract) {
+  public async listArticles({ request, response }) {
     let {
       limit,
       offset,
@@ -53,7 +53,7 @@ export default class ArticlesController {
     });
   }
 
-  public async getArticleById({ request, response }: HttpContextContract) {
+  public async getArticleById({ request, response }) {
     let { article_id } = request.all();
 
     await request.validate(ArticleValidator.getArticleById);
@@ -65,15 +65,18 @@ export default class ArticlesController {
     });
   }
 
-  public async updateArticle({ request, response }: HttpContextContract) {
+  public async updateArticle({ request, response }) {
     let { article_id, title, article_tags, images, content } = request.all();
+    let author_uuid = request.user.user_uuid;
+
     await request.validate(ArticleValidator.updateArticle);
     let article = await ArticleService.updateArticle(
       article_id,
       title,
       article_tags,
       images,
-      content
+      content,
+      author_uuid
     );
     if (article?.success === false) {
       return response
@@ -83,13 +86,13 @@ export default class ArticlesController {
     return response.send({ success: true });
   }
 
-  // TODO: use those practices in your project
   public async deleteArticle({ request, response }) {
     let { article_id } = request.all();
+    let author_uuid = request.user.user_uuid;
 
     await request.validate(ArticleValidator.updateArticle);
 
-    let article = await ArticleService.deleteArticle(article_id);
+    let article = await ArticleService.deleteArticle(article_id,author_uuid);
 
     if (article?.success === false) {
       return response
@@ -102,7 +105,6 @@ export default class ArticlesController {
 
   ////**** Drafts ****////
 
-  //  TODO: need to add authentication so that only logged in user can see drafts
   public async createDraft({ request, response }) {
     let { title, content, images, tags } = request.all();
     let user_uuid = request.user.user_uuid;
@@ -214,7 +216,7 @@ export default class ArticlesController {
     });
   }
 
-  public async listSubCategories({ request, response }: HttpContextContract) {
+  public async listSubCategories({ request, response }) {
     try {
       let { limit, offset } = request.all();
       let limitQuery = "";
@@ -258,7 +260,7 @@ export default class ArticlesController {
     }
   }
 
-  public async createSubCategories({ request, response }: HttpContextContract) {
+  public async createSubCategories({ request, response }) {
     try {
       let { sub_categories } = request.all();
 
@@ -279,7 +281,7 @@ export default class ArticlesController {
     }
   }
 
-  public async updateSubcategories({ request, response }: HttpContextContract) {
+  public async updateSubcategories({ request, response }) {
     try {
       let { sub_category_id, sub_category } = request.all();
 
@@ -306,7 +308,7 @@ export default class ArticlesController {
     }
   }
 
-  public async deleteSubcategories({ request, response }: HttpContextContract) {
+  public async deleteSubcategories({ request, response }) {
     try {
       let { sub_category_id } = request.all();
 
@@ -321,7 +323,7 @@ export default class ArticlesController {
     }
   }
 
-  public async listTopAuthors({ request, response }: HttpContextContract) {
+  public async listTopAuthors({ request, response }) {
     try {
       let data = await Database.query()
         .select(

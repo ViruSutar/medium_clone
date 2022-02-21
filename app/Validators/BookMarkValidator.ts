@@ -41,7 +41,6 @@ export default class BookMarkValidator {
 
   static addBookMark = {
     schema: schema.create({
-      user_uuid: schema.string(),
       article_id: schema.number(),
     }),
     messages: BaseValidator.messages,

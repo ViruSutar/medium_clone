@@ -7,7 +7,7 @@ export default class Tags extends BaseSchema {
     this.schema.createTable(this.tableName, (table) => {
       table.increments('id')
       table.string('name').notNullable()
-      table.enum('status',["APPROVED","PENDING","REJECTED"])
+      table.boolean('status').defaultTo(20)
       table.bigInteger('used_in_articles_count')
 
       /**

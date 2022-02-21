@@ -1,6 +1,9 @@
 import Database from "@ioc:Adonis/Lucid/Database";
+import Article from "App/Models/Article";
 import Comment from "App/Models/Comment";
 import Reply from "App/Models/Reply";
+import User from "App/Models/User";
+import NotificationService from "./NotificationService";
 
 export default class CommentService {
   static async writeComment(user_uuid, article_id, comment) {
@@ -9,6 +12,16 @@ export default class CommentService {
       article_id,
       comment,
     });
+    
+    let article=await Article.find(article_id)
+    let author_uuid=article?.author_id
+    let user_name = await User.findBy("uuid", user_uuid);
+    // TODO: send notication to author of article
+    // TODO: before writing apis think what you want to write or write down if api is big and then execute then you won't missout things
+
+    let notification = `${user_name?.name} has commented on your post`;
+
+    NotificationService.createNotification(author_uuid, "comments", notification);
 
     return { success: true, CommentId: data.id };
   }

@@ -5,35 +5,42 @@ import BookMarkValidator from "App/Validators/BookMarkValidator";
 
 export default class BookMarksController {
   public async addBookMark({ request, response }) {
-    let { user_uuid, article_id } = request.all();
+    let { article_id } = request.all();
+    let user_uuid = request.user.user_uuid;
 
     await request.validate(BookMarkValidator.addBookMark);
-    await BookMarkService.addBookMark(user_uuid, article_id);
+   let bookmark=  await BookMarkService.addBookMark(user_uuid, article_id);
+
+   if(bookmark.success === false){
+     return response.status(bookmark.status_code).send({success:false,message:bookmark.message})
+   }
 
     return response.send({ success: true });
   }
 
   public async removeBookMark({ request, response }) {
-    let {bookmark_id } = request.all();
-
+    let { bookmark_id } = request.all();
+    let user_uuid = request.user.user_uuid;
+    
     await request.validate(BookMarkValidator.removeBookMark);
 
-    let bookmark = await BookMarkService.removeBookMark(bookmark_id);
-
+    let bookmark = await BookMarkService.removeBookMark(bookmark_id,user_uuid);
+    
     if (bookmark.success === false) {
+
       return response
-        .status(404)
+        .status(bookmark.status_code)
         .send({ success: false, message: bookmark.message });
     }
 
     return response.send({ success: true });
   }
 
-  public async listBookMarks({request,response}){
-    let {user_uuid}=request.all()
-     
-    let bookmarks=await BookMarkService.listBookMarks(user_uuid)
+  public async listBookMarks({ request, response }) {
+    let user_uuid = request.user.user_uuid;
 
-    return response.send({success:true,bookmarks})
+    let bookmarks = await BookMarkService.listBookMarks(user_uuid);
+
+    return response.send({ success: true, bookmarks });
   }
 }

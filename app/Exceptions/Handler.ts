@@ -32,10 +32,9 @@ export default class ExceptionHandler extends HttpExceptionHandler {
           message: `user with ${error.messages.errors[0].field} already exist`,
         });
       }
-
       return ctx.response
         .status(400)
-        .send({ success: false, message: error.messages.errors[0].message });
+        .send({ success: false, message: error.messages.errors[0].field + " required" });
     }
   
     if (error.code === "ER_ROW_IS_REFERENCED_2") {

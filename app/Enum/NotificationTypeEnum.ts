@@ -1,4 +1,5 @@
 export enum NotificationType {
- "replies"=10,
- "articles"=20,
+ "mentions"=10,
+ "likes"=20,
+ "comments" = 30
 }

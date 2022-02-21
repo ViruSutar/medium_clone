@@ -9,7 +9,7 @@ export default class Tag extends BaseModel {
   public name: string;
 
   @column()
-  public status: string;
+  public status:number;
 
   @column()
   public used_in_articles_count: number;
