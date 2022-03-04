@@ -43,7 +43,6 @@ export default class ArticleValidator {
     schema: schema.create({
       title: schema.string(),
       images: schema.array.optional().anyMembers(),
-      author_id: schema.string(),
       tags: schema.array().anyMembers(),
       content:schema.string.optional()
     }),
@@ -54,8 +53,7 @@ export default class ArticleValidator {
     schema: schema.create({
       article_id: schema.number(),
       title: schema.string.optional(),
-      images: schema.array.optional().anyMembers(),
-      author_id: schema.string.optional(),
+      images: schema.array.optional().anyMembers(),   
       tags: schema.array.optional().anyMembers(),
       content:schema.string.optional()
     }),

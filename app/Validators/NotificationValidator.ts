@@ -41,7 +41,7 @@ export default class NotificationValidator {
   static createNotification = {
     schema: schema.create({
       user_uuid:schema.string(),
-      type:schema.array().members(schema.enum(['mentions','likes','comments'])),
+      type:schema.array().members(schema.enum(['mentions','likes','comments','tags'])),
       notification:schema.string(),
     }),
     message: BaseValidator.messages,

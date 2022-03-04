@@ -28,6 +28,8 @@ import './Routes/draft'
 import './Routes/bookmark'
 import './Routes/notification'
 import './Routes/auth'
+import './Routes/tag'
+
 
 
 

@@ -12,7 +12,31 @@ export default class Tag extends BaseModel {
   public status:number;
 
   @column()
+  public image_link:string;
+
+  @column()
+  public user_uuid:string;
+
+  @column()
+  public description:string;
+
+  @column()
+  public rejection_note:string;
+
+  @column()
   public used_in_articles_count: number;
+  
+  @column()
+  public is_active :boolean
+
+  @column()
+  public today_used_in_articles:number;
+
+  @column()
+  public weekly_used_in_articles:number;
+
+  @column()
+  public date:Date;
 
   @column.dateTime({ autoCreate: true })
   public createdAt: DateTime;
