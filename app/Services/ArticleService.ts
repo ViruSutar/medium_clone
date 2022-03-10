@@ -29,23 +29,19 @@ class ArticleService {
     });
     let articleId = article.id;
 
-    // ArticleTag;
-    // tags &&
-    //   tags.map((tagId) => {
-    //     ArticleTag.create({
-    //       tag_id: tagId,
-    //       article_id: articleId,
-    //     });
-    //   });
+    await ArticleTag.create({
+      tag_ids: JSON.stringify(tags),
+      article_id: articleId,
+    });
 
     tags &&
       tags.map(async (tagId) => {
         //  TODO: run cron job to reset weekly and today columns
         await Database.rawQuery(
           'update tags set \
-          tags.date = IF(tags.date IS NULL ,curdate(),tags.date),\
+          tags.weekly_date = IF(tags.weekly_date IS NULL ,curdate(),tags.weekly_date),\
            tags.today_used_in_articles = tags.today_used_in_articles + 1,\
-           tags.weekly_used_in_articles = IF(DATE_ADD(tags.date, INTERVAL 7 DAY) >= DATE_FORMAT(CURDATE(),"%Y-%m-%d"),\
+           tags.weekly_used_in_articles = IF(DATE_ADD(tags.weekly_date, INTERVAL 7 DAY) >= DATE_FORMAT(CURDATE(),"%Y-%m-%d"),\
            tags.weekly_used_in_articles + 1,tags.weekly_used_in_articles) \
            where tags.id = :tagId',
           { tagId }
@@ -127,8 +123,8 @@ class ArticleService {
                      from articles \
                      join users on users.uuid=articles.author_id \
                      left join articles_images on articles_images.article_id = articles.id and is_cover = 1\
-                     left join  article_tags on  article_tags.article_id = articles.id\
-                     left join tags on tags.id =  article_tags.tag_id  where articles.is_active = 1 AND articles.is_draft = 0 \
+                     left join  tags on  tags.article_id = articles.id\
+                     left join tags on tags.id =  tags.tag_id  where articles.is_active = 1 AND articles.is_draft = 0 \
                       ' +
           tagQuery +
           authorNameQuery +
@@ -145,8 +141,8 @@ class ArticleService {
                      from articles \
                      join users on users.uuid=articles.author_id \
                      left join articles_images on articles_images.article_id = articles.id and is_cover = 1 \
-                     left join  article_tags on  article_tags.article_id = articles.id\
-                     left join tags on tags.id =  article_tags.tag_id \
+                     left join  tags on  tags.article_id = articles.id\
+                     left join tags on tags.id =  tags.tag_id \
                      where articles.is_active=1 AND articles.is_draft = 0" +
           tagQuery +
           authorNameQuery,
@@ -176,8 +172,8 @@ class ArticleService {
       )
       .from("articles")
       .join("users", "users.uuid", "=", "articles.author_id")
-      .leftJoin("article_tags", " article_tags.article_id", "=", "articles.id")
-      .leftJoin("tags", "tags.id", "=", "article_tags.tag_id")
+      .leftJoin("tags", " tags.article_id", "=", "articles.id")
+      .leftJoin("tags", "tags.id", "=", "tags.tag_id")
       .joinRaw(
         Database.rawQuery(
           "left join articles_images on articles_images.article_id = articles.id"
@@ -239,7 +235,7 @@ class ArticleService {
   static async updateArticle(
     article_id,
     title,
-    article_tags,
+    tags,
     images,
     content,
     author_uuid
@@ -250,9 +246,9 @@ class ArticleService {
       return { success: false, message: " article not found " };
     }
 
-    if (author_uuid !== article.author_id) {
-      return { success: false, message: "you do not have this permission" };
-    }
+    // if (author_uuid !== article.author_id) {
+    //   return { success: false, message: "you do not have this permission" };
+    // }
 
     if (images) {
       await ArticlesImage.query().where("article_id", article_id).delete();
@@ -266,13 +262,43 @@ class ArticleService {
       });
     }
 
-    if (article_tags) {
-      await ArticleTag.query().where({ article_id }).delete();
-      article_tags.map(async (data) => {
-        await ArticleTag.create({
-          tag_id: data,
-          article_id: article?.id,
-        });
+    if (tags) {
+      let article_tag = await ArticleTag.findBy("article_id", article_id);
+
+      if (!article_tag) {
+        return { success: false, message: "tags with this article not found" };
+      }
+
+      let old_tags = JSON.parse(article_tag.tag_ids);
+      // TODO: here we need to check if we are updating todays articles with date and same for the weekly count too
+      old_tags.map(async (tagId) => {
+        await Database.rawQuery(
+          'update tags set \
+           tags.today_used_in_articles = IF(tags.today_date =  DATE_FORMAT(CURDATE(),"%Y-%m-%d") ,tags.today_used_in_articles - 1,tags.today_used_in_articles), \
+           tags.weekly_used_in_articles = IF(DATE_ADD(tags.weekly_date, INTERVAL 7 DAY) >= DATE_FORMAT(CURDATE(),"%Y-%m-%d"),\
+           tags.weekly_used_in_articles - 1,tags.weekly_used_in_articles) \
+           where tags.id = :tagId',
+          { tagId }
+        );
+      });
+
+      tags.map(async (tagId) => {
+        //  TODO: run cron job to reset weekly and today columns
+        await Database.rawQuery(
+          'update tags set \
+             tags.today_used_in_articles = IF(tags.today_date =  DATE_FORMAT(CURDATE(),"%Y-%m-%d") ,tags.today_used_in_articles + 1,tags.today_used_in_articles),\
+             tags.weekly_used_in_articles = IF(DATE_ADD(tags.weekly_date, INTERVAL 7 DAY) >= DATE_FORMAT(CURDATE(),"%Y-%m-%d"),\
+             tags.weekly_used_in_articles + 1,tags.weekly_used_in_articles) \
+             where tags.id = :tagId',
+          { tagId }
+        );
+      });
+
+      article_tag?.delete();
+      article_tag?.save();
+      await ArticleTag.create({
+        tag_ids: JSON.stringify(tags),
+        article_id: article_id,
       });
     }
 

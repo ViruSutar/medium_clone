@@ -13,7 +13,7 @@ export default class CheckAccess {
    }
    else{
     //  TODO: if not logged in redirect to login page
-     return response.status(401).send({success:false,messagge:'please login or create new account'})
+     return response.status(401).send({success:false,messagge:'please login or create new account'})  
    }
   
   await next()     

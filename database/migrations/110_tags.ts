@@ -12,9 +12,10 @@ export default class Tags extends BaseSchema {
       table.string("image_link").notNullable();
       table.string("user_uuid").notNullable();
       table.string("rejection_note").nullable();
+      table.date("today_date")
       table.bigInteger("today_used_in_articles").defaultTo(0)
       table.bigInteger("weekly_used_in_articles").defaultTo(0)
-      table.date('date').comment('column used to check weekly used tags')
+      table.date('weekly_date').comment('column used to check weekly used tags')
       table.bigInteger("used_in_articles").defaultTo(0)
       table.boolean('is_active').defaultTo(true)
 

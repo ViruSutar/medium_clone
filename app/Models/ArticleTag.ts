@@ -6,7 +6,7 @@ export default class ArticleTag extends BaseModel {
   public id: number;
 
   @column()
-  public tag_id: number;
+  public tag_ids:string;
 
   @column()
   public article_id: number;

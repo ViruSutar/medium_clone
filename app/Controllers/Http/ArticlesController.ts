@@ -66,14 +66,14 @@ export default class ArticlesController {
   }
 
   public async updateArticle({ request, response }) {
-    let { article_id, title, article_tags, images, content } = request.all();
+    let { article_id, title, tags, images, content } = request.all();
     let author_uuid = request.user.user_uuid;
 
     await request.validate(ArticleValidator.updateArticle);
     let article = await ArticleService.updateArticle(
       article_id,
       title,
-      article_tags,
+      tags,
       images,
       content,
       author_uuid

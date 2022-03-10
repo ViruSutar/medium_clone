@@ -36,7 +36,10 @@ export default class Tag extends BaseModel {
   public weekly_used_in_articles:number;
 
   @column()
-  public date:Date;
+  public today_date:Date;
+  
+  @column()
+  public weekly_date:Date;
 
   @column.dateTime({ autoCreate: true })
   public createdAt: DateTime;

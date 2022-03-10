@@ -1,4 +1,4 @@
-import { schema } from "@ioc:Adonis/Core/Validator";
+import { schema, rules } from "@ioc:Adonis/Core/Validator";
 import { HttpContextContract } from "@ioc:Adonis/Core/HttpContext";
 import BaseValidator from "./BaseValidator";
 
@@ -43,8 +43,8 @@ export default class ArticleValidator {
     schema: schema.create({
       title: schema.string(),
       images: schema.array.optional().anyMembers(),
-      tags: schema.array().anyMembers(),
-      content:schema.string.optional()
+      tags: schema.array([rules.maxLength(5)]).members(schema.number()),
+      content: schema.string.optional(),
     }),
     messages: BaseValidator.messages,
   };
@@ -53,9 +53,9 @@ export default class ArticleValidator {
     schema: schema.create({
       article_id: schema.number(),
       title: schema.string.optional(),
-      images: schema.array.optional().anyMembers(),   
-      tags: schema.array.optional().anyMembers(),
-      content:schema.string.optional()
+      images: schema.array.optional().anyMembers(),
+      tags: schema.array([rules.maxLength(5)]).members(schema.number()),
+      content: schema.string.optional(),
     }),
     messages: BaseValidator.messages,
   };
