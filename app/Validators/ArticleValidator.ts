@@ -66,4 +66,11 @@ export default class ArticleValidator {
     }),
     messages: BaseValidator.messages,
   };
+
+  static deleteArticle = {
+    schema:schema.create({
+      article_id:schema.number()
+    }),
+    messages: BaseValidator.messages
+  }
 }

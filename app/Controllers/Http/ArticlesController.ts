@@ -90,7 +90,7 @@ export default class ArticlesController {
     let { article_id } = request.all();
     let author_uuid = request.user.user_uuid;
 
-    await request.validate(ArticleValidator.updateArticle);
+    await request.validate(ArticleValidator.deleteArticle);
 
     let article = await ArticleService.deleteArticle(article_id,author_uuid);
 

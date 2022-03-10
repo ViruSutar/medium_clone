@@ -246,9 +246,9 @@ class ArticleService {
       return { success: false, message: " article not found " };
     }
 
-    // if (author_uuid !== article.author_id) {
-    //   return { success: false, message: "you do not have this permission" };
-    // }
+    if (author_uuid !== article.author_id) {
+      return { success: false, message: "you do not have this permission" };
+    }
 
     if (images) {
       await ArticlesImage.query().where("article_id", article_id).delete();
@@ -318,8 +318,27 @@ class ArticleService {
     if (author_uuid !== article.author_id) {
       return { success: false, message: "you do not have this permission" };
     }
-    await ArticleTag.query().delete().where("article_id", article_id);
+
+    let article_tag = await ArticleTag.findBy("article_id", article_id);
+
+    if (!article_tag) {
+      return { success: false, message: "tags with this article not found" };
+    }
+
+    let tags = JSON.parse(article_tag.tag_ids);
+    tags.map(async (tagId) => {
+      await Database.rawQuery(
+        'update tags set \
+         tags.today_used_in_articles = IF(tags.today_date =  DATE_FORMAT(CURDATE(),"%Y-%m-%d") ,tags.today_used_in_articles - 1,tags.today_used_in_articles), \
+         tags.weekly_used_in_articles = IF(DATE_ADD(tags.weekly_date, INTERVAL 7 DAY) >= DATE_FORMAT(CURDATE(),"%Y-%m-%d"),\
+         tags.weekly_used_in_articles - 1,tags.weekly_used_in_articles) \
+         where tags.id = :tagId',
+        { tagId }
+      );
+    });
     await ArticlesImage.query().delete().where("article_id", article_id);
+    article_tag.delete();
+    article_tag.save();
     article.delete();
     article.save();
   }
