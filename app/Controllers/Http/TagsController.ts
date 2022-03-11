@@ -50,9 +50,17 @@ export default class TagsController {
     return response.send({ success: true });
   }
 
-  // public async listTags({request,response}){
-  //     let {}=request.all()
-  // }
+  public async listTags({request,response}){
+      let {today_trending,weekly_trending,limit,offset}=request.all()
+
+      let tags=await TagService.listTags(today_trending,weekly_trending,limit,offset)
+
+      if(tags.success === false){
+        return response.status(tags.status_code).send({success:false,message:tags.message})
+      }
+
+      return response.send({success:true,Data:tags.tags})
+  }
 
   public async deleteTag({ request, response }) {
     let { tag_id } = request.all();

@@ -11,6 +11,7 @@ Route.post('tag/admin/reject','TagsController.rejectTag').middleware('checkAcces
 
 // These routes for users
 Route.get('tag/search','TagsController.searchTag').middleware('checkAccess')
+Route.get('tag/list','TagsController.listTags').middleware('checkAccess')
 Route.post('tag/request','TagsController.RequestForTag').middleware('checkAccess')
 
 

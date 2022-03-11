@@ -42,7 +42,6 @@ export default class TagService {
     }
 
     console.log(find_tag);
-    
 
     if (!image_link) {
       image_link =
@@ -79,21 +78,70 @@ export default class TagService {
     return { success: true, tags: tags.length !== 0 ? tags : "tag not found" };
   }
 
-  static async listTags() {
+  static async listTags(
+    today_trending: string,
+    weekly_trending: string,
+    limit: string,
+    offset: string
+  ) {
     // TODO: tag image needed
-    // TODO: trending tags feature used in article today,this week  overall 
-    let tags = await Tag.query().select("name", "used_in_articles_count");
+    // TODO: trending tags feature used in article today,this week  overall
+    // TODO: today trending tags top 6  weekly trending one tab for normal
+    let todayTrendingQuery = "";
+    let weeklyTrendingQuery = "";
+    let orderById = "tags.id desc";
+    if (today_trending && weekly_trending) {
+      return {
+        success: false,
+        status_code: 400,
+        message: "Cannot use two filters together",
+      };
+    }
+    if (!limit) {
+      limit = "1000000000000000";
+    }
+
+    if (!offset) {
+      offset = "0";
+    }
+
+    if (today_trending === 'true') {
+      orderById = "";
+      todayTrendingQuery = "tags.today_used_in_articles desc";
+    }
+
+    if (weekly_trending === 'true') {
+      orderById = "";
+      weeklyTrendingQuery = "tags.weekly_used_in_articles desc";
+    }
+
+    let tags = await Database.query()
+      .select(
+        Database.rawQuery(
+          "tags.id,tags.name,tags.image_link,tags.today_used_in_articles,tags.weekly_used_in_articles, \
+                                                tags.weekly_used_in_articles"
+        )
+      )
+      .from("tags")
+      .whereRaw(Database.rawQuery("tags.is_active = 1 AND tags.status = 10 "))
+      .orderByRaw(
+        Database.rawQuery(orderById + todayTrendingQuery + weeklyTrendingQuery)
+      )
+      .limit(parseInt(limit))
+      .offset(parseInt(offset))
+     
 
     return { success: true, tags: tags ? tags : "no tags found" };
   }
 
   static async deleteTag(tag_id: number, user_uuid: string) {
+    // TODO: check admin and send notification to creator of tag
     let tag = await Tag.find(tag_id);
     if (!tag) {
       return { success: false, status_code: 404, message: "Tag not found" };
     }
 
-    tag.is_active=false;
+    tag.is_active = false;
     tag.save();
 
     return { success: true };
@@ -118,7 +166,7 @@ export default class TagService {
 
     if (status[0] === "Approved") {
       let tag_creater_uuid = tag.user_uuid;
-      
+
       NotificationService.createNotification(
         tag_creater_uuid,
         "tags",
@@ -134,19 +182,19 @@ export default class TagService {
     if (!tag) {
       return { success: false, status_code: 404, message: "Tag not found" };
     }
-    if(tag.status === TagEnums.Rejected ){
-      return {success:false,status_code:400,message:'This tag is already rejected'}
+    if (tag.status === TagEnums.Rejected) {
+      return {
+        success: false,
+        status_code: 400,
+        message: "This tag is already rejected",
+      };
     }
     tag.status = TagEnums.Rejected;
-    tag.rejection_note =rejection_note;
-    let message=`Sorry we have requested your tag request for reason  "${rejection_note}"`
+    tag.rejection_note = rejection_note;
+    let message = `Sorry we have requested your tag request for reason  "${rejection_note}"`;
     tag.save();
     let tag_creater_uuid = tag.user_uuid;
-    NotificationService.createNotification(
-      tag_creater_uuid,
-      "tags",
-      message
-    );
+    NotificationService.createNotification(tag_creater_uuid, "tags", message);
   }
 
   static async listTagsAdmin(
