@@ -59,7 +59,7 @@ export default class TagsController {
         return response.status(tags.status_code).send({success:false,message:tags.message})
       }
 
-      return response.send({success:true,Data:tags.tags})
+      return response.send({success:true,Data:tags.tags,count:tags.total})
   }
 
   public async deleteTag({ request, response }) {

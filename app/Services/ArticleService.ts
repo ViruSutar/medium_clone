@@ -4,12 +4,9 @@ import Database from "@ioc:Adonis/Lucid/Database";
 import Article from "App/Models/Article";
 import ArticlesImage from "App/Models/ArticlesImage";
 import ArticleTag from "App/Models/ArticleTag";
-import Tag from "App/Models/Tag";
-import Tags from "Database/migrations/110_tags";
 import readingTime from "reading-time";
 
 class ArticleService {
-  // TODO:create articles tags if at
   static async createArticle(title, content, images, author_id, tags) {
     let reading_time = readingTime(content);
     let value: number = 0;
@@ -29,14 +26,15 @@ class ArticleService {
     });
     let articleId = article.id;
 
-    await ArticleTag.create({
-      tag_ids: JSON.stringify(tags),
-      article_id: articleId,
-    });
-
     tags &&
       tags.map(async (tagId) => {
         //  TODO: run cron job to reset weekly and today columns
+
+        await ArticleTag.create({
+          tag_id: tagId,
+          article_id: articleId,
+        });
+
         await Database.rawQuery(
           'update tags set \
           tags.weekly_date = IF(tags.weekly_date IS NULL ,curdate(),tags.weekly_date),\
@@ -69,7 +67,8 @@ class ArticleService {
     article_tag,
     sort_by_likes,
     sort_by_date,
-    author_name
+    author_name,
+    user_uuid
   ) {
     let limitQuery = "";
     let offsetQuery = "";
@@ -78,7 +77,7 @@ class ArticleService {
     let orderByLikes = "";
     let orderById = "Order By articles.id  desc ";
     let orderByDate = " ";
-    let params = {};
+    let params = { user_uuid };
 
     if (limit != null && limit != "") {
       limitQuery = " limit :limit";
@@ -120,12 +119,13 @@ class ArticleService {
       Database.rawQuery(
         'select users.name as author_name, articles.title,articles.id as article_id,SUBSTRING(articles.content,1,200) as content,  \
                     articles.likes_count,articles.comments_count, DATE_FORMAT(articles.created_at,"%d/%m/%Y") as Date,\
-                    articles_images.image_link as image,tags.name as tag_name,articles.reading_time\
+                    articles_images.image_link as image,JSON_ARRAYAGG(tags.name) as tag_name,articles.reading_time\
                      from articles \
                      join users on users.uuid=articles.author_id \
                      left join articles_images on articles_images.article_id = articles.id and is_cover = 1\
-                     left join  tags on  tags.article_id = articles.id\
-                     left join tags on tags.id =  tags.tag_id  where articles.is_active = 1 AND articles.is_draft = 0 \
+                     left join  article_tags on  article_tags.article_id = articles.id\
+                     left join tags on article_tags.tag_id = tags.id \
+                     where articles.is_active = 1 AND articles.is_draft = 0 \
                       ' +
           tagQuery +
           authorNameQuery +
@@ -136,22 +136,28 @@ class ArticleService {
           limitQuery +
           offsetQuery,
         params
-      ),
+      ).then((data) => {
+        return data[0].map((articles) => {
+          articles.tag_name = JSON.parse(articles.tag_name);
+          return articles;
+        });
+      }),
       Database.rawQuery(
         "select count(distinct articles.id) as count \
                      from articles \
                      join users on users.uuid=articles.author_id \
                      left join articles_images on articles_images.article_id = articles.id and is_cover = 1 \
-                     left join  tags on  tags.article_id = articles.id\
-                     left join tags on tags.id =  tags.tag_id \
+                     left join  article_tags on  article_tags.article_id = articles.id\
+                     left join tags on tags.id =  article_tags.tag_id \
                      where articles.is_active=1 AND articles.is_draft = 0" +
           tagQuery +
           authorNameQuery,
         params
       ),
     ]);
+
     return {
-      data: data[0].length === 0 ? "article not found" : data[0],
+      data: data.length === 0 ? "article not found" : data,
       total: total[0] ? total[0][0].count : 0,
     };
   }
@@ -263,13 +269,15 @@ class ArticleService {
     }
 
     if (tags) {
-      let article_tag = await ArticleTag.findBy("article_id", article_id);
+      let old_tags = await Database.query()
+        .select("tag_id")
+        .from("article_tags")
+        .where("article_id", article_id);
 
-      if (!article_tag) {
+      if (old_tags.length === 0) {
         return { success: false, message: "tags with this article not found" };
       }
 
-      let old_tags = JSON.parse(article_tag.tag_ids);
       // TODO: here we need to check if we are updating todays articles with date and same for the weekly count too
       old_tags.map(async (tagId) => {
         await Database.rawQuery(
@@ -279,8 +287,20 @@ class ArticleService {
            tags.weekly_used_in_articles - 1,tags.weekly_used_in_articles), \
            tags.used_in_articles = tags.used_in_articles - 1\
            where tags.id = :tagId',
-          { tagId }
+          { tagId: tagId.tag_id }
         );
+      });
+
+      await Database.query()
+        .delete()
+        .from("article_tags")
+        .where("article_id", article_id);
+
+      tags.map(async (tagId) => {
+        await ArticleTag.create({
+          tag_id: tagId,
+          article_id: article_id,
+        });
       });
 
       tags.map(async (tagId) => {
@@ -293,13 +313,6 @@ class ArticleService {
              where tags.id = :tagId',
           { tagId }
         );
-      });
-
-      article_tag?.delete();
-      article_tag?.save();
-      await ArticleTag.create({
-        tag_ids: JSON.stringify(tags),
-        article_id: article_id,
       });
     }
 
@@ -320,27 +333,40 @@ class ArticleService {
       return { success: false, message: "you do not have this permission" };
     }
 
-    let article_tag = await ArticleTag.findBy("article_id", article_id);
+    let old_tags = await Database.query()
+      .select("tag_id")
+      .from("article_tags")
+      .where("article_id", article_id);
 
-      if (!article_tag) {
-        return { success: false, message: "tags with this article not found" };
-      }
+    if (old_tags.length === 0) {
+      return { success: false, message: "tags with this article not found" };
+    }
 
-      let tags = JSON.parse(article_tag.tag_ids);
-      tags.map(async (tagId) => {
-        await Database.rawQuery(
-          'update tags set \
+    old_tags.map(async (tagId) => {
+      await Database.rawQuery(
+        'update tags set \
           tags.today_used_in_articles = IF(tags.today_date =  DATE_FORMAT(CURDATE(),"%Y-%m-%d") ,tags.today_used_in_articles - 1,tags.today_used_in_articles), \
           tags.weekly_used_in_articles = IF(DATE_ADD(tags.weekly_date, INTERVAL 7 DAY) >= DATE_FORMAT(CURDATE(),"%Y-%m-%d"),\
           tags.weekly_used_in_articles - 1,tags.weekly_used_in_articles) ,\
-          tags.used_in_articles = tags.used_in_articles + 1 \
-          where tags.id = :tagId',{ tagId }
-        )
-      });
+          tags.used_in_articles = tags.used_in_articles - 1 \
+          where tags.id = :tagId',
+        { tagId: tagId.tag_id }
+      );
+    });
     await ArticlesImage.query().delete().where("article_id", article_id);
-    article_tag.delete();
-    article_tag.save();
-    article.delete();
+    await Database.query()
+      .delete()
+      .from("article_tags")
+      .where("article_id", article_id);
+
+    // TODO: if any of querie failed run rollback command
+
+    await Database.rawQuery(
+      "delete from  bookmarks where bookmarks.article_id = :article_id ",
+      { article_id }
+    );
+
+    article.is_active = false;
     article.save();
   }
 }

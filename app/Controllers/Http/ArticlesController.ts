@@ -1,9 +1,7 @@
 // import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import Database from "@ioc:Adonis/Lucid/Database";
-import Article from "App/Models/Article";
 import { schema } from "@ioc:Adonis/Core/Validator";
 import ArticleSubCategory from "App/Models/ArticleSubCategory";
-import ArticlesImage from "App/Models/ArticlesImage";
 import ArticleValidator from "App/Validators/ArticleValidator";
 import ArticleService from "App/Services/ArticleService";
 import DraftService from "App/Services/DraftService";
@@ -36,6 +34,7 @@ export default class ArticlesController {
       sort_by_date,
       author_name,
     } = request.all();
+    let user_uuid = request.user.user_uuid;
 
     let articles = await ArticleService.listArticles(
       limit,
@@ -43,7 +42,8 @@ export default class ArticlesController {
       article_tag,
       sort_by_likes,
       sort_by_date,
-      author_name
+      author_name,
+      user_uuid
     );
 
     return response.send({

@@ -4,9 +4,13 @@ import Bookmark from "App/Models/Bookmark";
 
 export default class BookMarkService {
   static async addBookMark(user_uuid, article_id) {
-    let article = await Article.find(article_id);
+    let article = await Article.query()
+      .select("articles.id")
+      .where("articles.is_active", 1)
+      .where("articles.is_draft", 0)
+      .where("articles.id", article_id);
 
-    if (!article) {
+    if (article.length === 0) {
       return { success: false, status_code: 404, message: "article not found" };
     }
 
@@ -15,7 +19,7 @@ export default class BookMarkService {
       .where("article_id", article_id);
 
     if (bookmark.length !== 0) {
-      return { success: true };
+      return { success: false, status_code:400,message:"This article is  already bookmarked"};
     }
     await Bookmark.create({
       user_id: user_uuid,
@@ -29,13 +33,20 @@ export default class BookMarkService {
     let bookmark = await Bookmark.find(bookmark_id);
 
     if (!bookmark) {
-      return { success: false, status_code:404,message: "bookmark not found" };
+      return {
+        success: false,
+        status_code: 404,
+        message: "bookmark not found",
+      };
     }
 
     if (bookmark.user_id !== user_uuid) {
-      return { success: false,status_code:403, message: "You do not have this permission" };
+      return {
+        success: false,
+        status_code: 403,
+        message: "You do not have this permission",
+      };
     }
-    
 
     bookmark.delete();
     bookmark.save();
@@ -43,24 +54,40 @@ export default class BookMarkService {
   }
 
   static async listBookMarks(user_uuid) {
-    let bookmarks = await Database.rawQuery(
-      'select users.name as author_name, articles.title,articles.id as article_id,SUBSTRING(articles.content,1,200) as content,  \
-      articles.likes_count,articles.comments_count, DATE_FORMAT(articles.created_at,"%d/%m/%Y") as Date,\
-      articles_images.image_link as image,tags.name as tag_name,articles.reading_time,bookmarks.id as bookmark_id\
-       from bookmarks \
-       join articles on bookmarks.article_id = articles.id\
-       join users on users.uuid=articles.author_id \
-       left join articles_images on articles_images.article_id = articles.id and is_cover = 1\
-       left join  article_tags on  article_tags.article_id = articles.id\
-       left join tags on tags.id =  article_tags.tag_id  where bookmarks.user_id = :user_uuid AND  articles.is_active = 1 AND articles.is_draft = 0 \
-       group by articles.id  ',
-      { user_uuid }
-    );
+    // TODO: we should not show deleted articles inside the bookmark even if they are bookmarked before article is been deleted
+    // TODO: and show message like this post is been removed for some reasons
 
+    let [bookmarks, total] = await Promise.all([
+      Database.rawQuery(
+        'select users.name as author_name, articles.title,articles.id as article_id,SUBSTRING(articles.content,1,200) as content,  \
+        articles.likes_count,articles.comments_count, DATE_FORMAT(articles.created_at,"%d/%m/%Y") as Date,\
+        articles_images.image_link as image,tags.name as tag_name,articles.reading_time,bookmarks.id as bookmark_id\
+         from bookmarks \
+         join articles on bookmarks.article_id = articles.id\
+         join users on users.uuid=articles.author_id \
+         left join articles_images on articles_images.article_id = articles.id and is_cover = 1\
+         left join  article_tags on  article_tags.article_id = articles.id\
+         left join tags on tags.id =  article_tags.tag_id  where bookmarks.user_id = :user_uuid AND  articles.is_active = 1 AND articles.is_draft = 0 \
+         group by articles.id  ',
+        { user_uuid }
+      ),
+      Database.rawQuery(
+        'select count(distinct bookmarks.id )as count\
+         from bookmarks \
+         join articles on bookmarks.article_id = articles.id\
+         join users on users.uuid=articles.author_id \
+         left join articles_images on articles_images.article_id = articles.id and is_cover = 1\
+         left join  article_tags on  article_tags.article_id = articles.id\
+         left join tags on tags.id =  article_tags.tag_id  where bookmarks.user_id = :user_uuid AND \
+         articles.is_active = 1 AND articles.is_draft = 0',
+        { user_uuid }
+      ),
+    ]);
+    
     return {
       success: true,
-      bookmarks:
-        bookmarks[0].length === 0 ? "No bookmarks found " : bookmarks[0],
+      bookmarks: bookmarks[0].length === 0 ? "No bookmarks found " : bookmarks[0],
+      total: total[0] ? total[0][0].count : 0,
     };
   }
 }

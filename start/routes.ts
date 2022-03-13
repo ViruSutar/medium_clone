@@ -22,13 +22,14 @@ import Route from '@ioc:Adonis/Core/Route'
 import './Routes/article'
 import './Routes/likes'
 import './Routes/comment'
-import './Routes/authorfollowers'
 import './Routes/user'
 import './Routes/draft'
 import './Routes/bookmark'
 import './Routes/notification'
 import './Routes/auth'
 import './Routes/tag'
+import './Routes/follower'
+
 
 
 

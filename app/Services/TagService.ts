@@ -84,9 +84,6 @@ export default class TagService {
     limit: string,
     offset: string
   ) {
-    // TODO: tag image needed
-    // TODO: trending tags feature used in article today,this week  overall
-    // TODO: today trending tags top 6  weekly trending one tab for normal
     let todayTrendingQuery = "";
     let weeklyTrendingQuery = "";
     let orderById = "tags.id desc";
@@ -115,7 +112,8 @@ export default class TagService {
       weeklyTrendingQuery = "tags.weekly_used_in_articles desc";
     }
 
-    let tags = await Database.query()
+    let [tags,total] = await Promise.all([
+      await Database.query()
       .select(
         Database.rawQuery(
           "tags.id,tags.name,tags.image_link,tags.today_used_in_articles,tags.weekly_used_in_articles, \
@@ -128,10 +126,23 @@ export default class TagService {
         Database.rawQuery(orderById + todayTrendingQuery + weeklyTrendingQuery)
       )
       .limit(parseInt(limit))
-      .offset(parseInt(offset))
-     
+      .offset(parseInt(offset)),
 
-    return { success: true, tags: tags ? tags : "no tags found" };
+      await Database.query()
+      .select(
+       Database.rawQuery("count(distinct tags.id) as count")
+      )
+      .from("tags")
+      .whereRaw(Database.rawQuery("tags.is_active = 1 AND tags.status = 10 "))
+      .orderByRaw(
+        Database.rawQuery(orderById + todayTrendingQuery + weeklyTrendingQuery)
+      )
+    ])
+    
+    return { success: true, 
+      tags: tags ? tags : "no tags found",
+      total: total[0] ? total[0].count : 0
+     };
   }
 
   static async deleteTag(tag_id: number, user_uuid: string) {

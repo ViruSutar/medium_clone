@@ -41,6 +41,6 @@ export default class BookMarksController {
 
     let bookmarks = await BookMarkService.listBookMarks(user_uuid);
 
-    return response.send({ success: true, bookmarks });
+    return response.send({ success: true,count:bookmarks.total, bookmarks:bookmarks.bookmarks});
   }
 }

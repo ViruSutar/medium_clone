@@ -16,7 +16,6 @@ export default class CommentService {
     let article=await Article.find(article_id)
     let author_uuid=article?.author_id
     let user_name = await User.findBy("uuid", user_uuid);
-    // TODO: send notication to author of article
     // TODO: before writing apis think what you want to write or write down if api is big and then execute then you won't missout things
 
     let notification = `${user_name?.name} has commented on your post`;

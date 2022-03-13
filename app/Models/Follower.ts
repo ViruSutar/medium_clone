@@ -1,15 +1,18 @@
 import { DateTime } from "luxon";
 import { BaseModel, column } from "@ioc:Adonis/Lucid/Orm";
 
-export default class ArticleTag extends BaseModel {
+export default class Follower extends BaseModel {
   @column({ isPrimary: true })
   public id: number;
 
   @column()
-  public tag_id:number;
+  public follower_id: string;
 
   @column()
-  public article_id: number;
+  public followee: string;
+
+  @column()
+  public is_active: number;
 
   @column.dateTime({ autoCreate: true })
   public createdAt: DateTime;
