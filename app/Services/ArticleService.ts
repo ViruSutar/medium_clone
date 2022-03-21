@@ -78,6 +78,10 @@ class ArticleService {
     let orderById = "Order By articles.id  desc ";
     let orderByDate = " ";
     let params = { user_uuid };
+    let weeklyTrendingQuery=""
+    let monthlyTrendingQuery=""
+    let threeMonthsTrendingQuery=""
+
 
     if (limit != null && limit != "") {
       limitQuery = " limit :limit";
