@@ -43,7 +43,7 @@ export default class ArticleValidator {
     schema: schema.create({
       title: schema.string(),
       images: schema.array.optional().anyMembers(),
-      tags: schema.array([rules.maxLength(5)]).members(schema.number()),
+      tags: schema.array([rules.maxLength(5),rules.minLength(1)]).members(schema.number()),
       content: schema.string.optional(),
     }),
     messages: BaseValidator.messages,

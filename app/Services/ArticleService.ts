@@ -11,6 +11,7 @@ class ArticleService {
     let reading_time = readingTime(content);
     let value: number = 0;
 
+  //  TODO: check unique tags or not 
     if (images.length >= 4) {
       value = 1;
     }
@@ -65,10 +66,12 @@ class ArticleService {
     limit,
     offset,
     article_tag,
-    sort_by_likes,
     sort_by_date,
     author_name,
-    user_uuid
+    user_uuid,
+    weekly_trending,
+    monthly_trending,
+    quarterly_trending
   ) {
     let limitQuery = "";
     let offsetQuery = "";
@@ -78,10 +81,9 @@ class ArticleService {
     let orderById = "Order By articles.id  desc ";
     let orderByDate = " ";
     let params = { user_uuid };
-    let weeklyTrendingQuery=""
-    let monthlyTrendingQuery=""
-    let threeMonthsTrendingQuery=""
-
+    let weeklyTrendingQuery = "";
+    let monthlyTrendingQuery = "";
+    let quarterlyTrendingQuery = "";
 
     if (limit != null && limit != "") {
       limitQuery = " limit :limit";
@@ -93,30 +95,70 @@ class ArticleService {
       params["offset"] = parseInt(offset);
     }
 
+    // if(weekly_trending === "true" &&  monthly_trending === "true" && quarterly_trending === "true" &&
+    // sort_by_likes === "true" && sort_by_date === "true" ){
+    //  return
+    // }
+
     if (article_tag) {
       tagQuery = " AND tags.name = :article_tag  ";
       params["article_tag"] = article_tag;
     }
 
-    if (sort_by_likes != null && sort_by_likes != "") {
-      //use limit 5 to get top 5 trending articles
-      //  TODO: this query  should run only once a day so the we can set todays top 5 articles
-      orderById = "";
-      orderByLikes = " order by articles.likes_count desc ";
-    }
+    // if (sort_by_likes === 'tr') {
+    //   //use limit 5 to get top 5 trending articles
+    //   //  TODO: this query  should run only once a day so the we can set todays top 5 articles
+    //   orderById = "";
+    //   orderByLikes = " order by articles.likes_count desc ";
+    // }
 
     if (sort_by_date != null && sort_by_date != "") {
       orderById = "";
       orderByDate = " order by articles.created_at " + sort_by_date;
     }
 
-    if (sort_by_likes && sort_by_date) {
-      return { message: "Select only one filter" };
-    }
-
     if (author_name != null && author_name != "") {
       params["author_name"] = author_name;
       authorNameQuery = " AND users.name = :author_name ";
+    }
+    // TODO: switch case
+    if (weekly_trending === "true") {
+      orderByLikes = "";
+      monthlyTrendingQuery = "";
+      quarterlyTrendingQuery = "";
+      orderById = "";
+      orderByDate = "";
+      weeklyTrendingQuery =
+        ' AND  date_add(trending_articles_dates.weekly_date ,INTERVAL 7 DAY) >= DATE_FORMAT(articles.created_at,"%Y-%m-%d") \
+                             AND trending_articles_dates.weekly_date <= DATE_FORMAT(articles.created_at,"%Y-%m-%d") ';
+
+      orderByLikes = " order by articles.likes_count desc ";
+    }
+
+    if (monthly_trending === "true") {
+      orderByLikes = "";
+      weeklyTrendingQuery = "";
+      quarterlyTrendingQuery = "";
+      orderById = "";
+      orderByDate = "";
+      monthlyTrendingQuery =
+        ' AND  date_add(trending_articles_dates.monthly_date ,INTERVAL 30 DAY) >= DATE_FORMAT(articles.created_at,"%Y-%m-%d") \
+                             AND trending_articles_dates.monthly_date <= DATE_FORMAT(articles.created_at,"%Y-%m-%d") ';
+
+      orderByLikes = " order by articles.likes_count desc ";
+    }
+
+    if (quarterly_trending === "true") {
+      orderByLikes = "";
+      monthlyTrendingQuery = "";
+      weeklyTrendingQuery = "";
+      orderById = "";
+      orderByDate = "";
+      quarterlyTrendingQuery =
+        ' AND  date_add(trending_articles_dates.quarterly_date ,INTERVAL 90 DAY) >= DATE_FORMAT(articles.created_at,"%Y-%m-%d") \
+                             AND trending_articles_dates.quarterly_date <= DATE_FORMAT(articles.created_at,"%Y-%m-%d") ';
+
+      orderByLikes = " order by articles.likes_count desc ";
     }
 
     let [data, total] = await Promise.all([
@@ -129,8 +171,12 @@ class ArticleService {
                      left join articles_images on articles_images.article_id = articles.id and is_cover = 1\
                      left join  article_tags on  article_tags.article_id = articles.id\
                      left join tags on article_tags.tag_id = tags.id \
+                     left join trending_articles_dates on trending_articles_dates.id = articles.trending_articles_date\
                      where articles.is_active = 1 AND articles.is_draft = 0 \
                       ' +
+          weeklyTrendingQuery +
+          monthlyTrendingQuery +
+          quarterlyTrendingQuery +
           tagQuery +
           authorNameQuery +
           " group by articles.id " +
@@ -152,8 +198,12 @@ class ArticleService {
                      join users on users.uuid=articles.author_id \
                      left join articles_images on articles_images.article_id = articles.id and is_cover = 1 \
                      left join  article_tags on  article_tags.article_id = articles.id\
+                     left join trending_articles_dates on trending_articles_dates.id = articles.trending_articles_date\
                      left join tags on tags.id =  article_tags.tag_id \
                      where articles.is_active=1 AND articles.is_draft = 0" +
+          weeklyTrendingQuery +
+          monthlyTrendingQuery +
+          quarterlyTrendingQuery +
           tagQuery +
           authorNameQuery,
         params

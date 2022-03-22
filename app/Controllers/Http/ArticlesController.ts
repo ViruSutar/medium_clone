@@ -30,9 +30,11 @@ export default class ArticlesController {
       limit,
       offset,
       article_tag,
-      sort_by_likes,
       sort_by_date,
       author_name,
+      weekly_trending,
+      monthly_trending,
+      quarterly_trending
     } = request.all();
     let user_uuid = request.user.user_uuid;
 
@@ -40,10 +42,12 @@ export default class ArticlesController {
       limit,
       offset,
       article_tag,
-      sort_by_likes,
       sort_by_date,
       author_name,
-      user_uuid
+      user_uuid,
+      weekly_trending,
+      monthly_trending,
+      quarterly_trending
     );
 
     return response.send({
