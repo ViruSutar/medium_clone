@@ -4,6 +4,7 @@ import Database from "@ioc:Adonis/Lucid/Database";
 import Article from "App/Models/Article";
 import ArticlesImage from "App/Models/ArticlesImage";
 import ArticleTag from "App/Models/ArticleTag";
+import User from "App/Models/User";
 import readingTime from "reading-time";
 
 class ArticleService {
@@ -11,7 +12,13 @@ class ArticleService {
     let reading_time = readingTime(content);
     let value: number = 0;
 
-  //  TODO: check unique tags or not 
+    let author = await User.findBy("uuid", author_id);
+
+    if (!author) {
+      return { success: false, message: "User not found" };
+    }
+
+    //  TODO: check unique tags or not
     if (images.length >= 4) {
       value = 1;
     }
@@ -56,6 +63,11 @@ class ArticleService {
           is_cover: data.is_cover,
         });
       });
+
+    if (author.role !== "ADMIN") {
+      author.role = "AUTHOR";
+      author.save();
+    }
     return {
       success: true,
       articleId: article.id,

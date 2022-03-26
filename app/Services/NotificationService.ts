@@ -31,6 +31,7 @@ export default class NotificationService {
           "notification,id,DATE_FORMAT(notifications.created_at,'%d/%m/%Y') as Date, \
                           (CASE when notifications.type = 10 THEN 'mentions' \
                                when notifications.type = 20 THEN 'likes' \
+                               when notifications.type = 50 THEN 'follwers' \
                                when notifications.type = 30 THEN 'comments' END) as type "
         )
       )
