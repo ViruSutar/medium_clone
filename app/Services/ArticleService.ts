@@ -85,6 +85,10 @@ class ArticleService {
     monthly_trending,
     quarterly_trending
   ) {
+    if (user_uuid === null) {
+      user_uuid = null;
+    }
+
     let limitQuery = "";
     let offsetQuery = "";
     let tagQuery = "";
@@ -177,7 +181,10 @@ class ArticleService {
       Database.rawQuery(
         'select users.name as author_name, articles.title,articles.id as article_id,SUBSTRING(articles.content,1,200) as content,  \
                     articles.likes_count,articles.comments_count, DATE_FORMAT(articles.created_at,"%d/%m/%Y") as Date,\
-                    articles_images.image_link as image,JSON_ARRAYAGG(tags.name) as tag_name,articles.reading_time\
+                    articles_images.image_link as image,JSON_ARRAYAGG(tags.name) as tag_name,articles.reading_time,\
+                    if((select id from likes where article_id = articles.id AND user_id = :user_uuid) is not null ,true,false)\
+                    as is_liked ,if((select id from bookmarks where article_id = articles.id AND user_id = :user_uuid) is not null ,true,false)\
+                    as is_bookmarked\
                      from articles \
                      join users on users.uuid=articles.author_id \
                      left join articles_images on articles_images.article_id = articles.id and is_cover = 1\

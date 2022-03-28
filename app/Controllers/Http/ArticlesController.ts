@@ -6,11 +6,12 @@ import ArticleValidator from "App/Validators/ArticleValidator";
 import ArticleService from "App/Services/ArticleService";
 import DraftService from "App/Services/DraftService";
 import DraftValidator from "App/Validators/DraftValidator";
+import jwt from "jsonwebtoken";
+import Env from "@ioc:Adonis/Core/Env";
 
 export default class ArticlesController {
-
   public async createArticle({ request, response }) {
-    let { title, content, images,  tags } = request.all();
+    let { title, content, images, tags } = request.all();
     let author_uuid = request.user.user_uuid;
 
     await request.validate(ArticleValidator.createArticle);
@@ -34,9 +35,22 @@ export default class ArticlesController {
       author_name,
       weekly_trending,
       monthly_trending,
-      quarterly_trending
+      quarterly_trending,
     } = request.all();
-    let user_uuid = request.user.user_uuid;
+
+    const token = request.header("Authorization");
+
+    if (token) {
+      const decode = jwt.verify(token, Env.get("SECRET_KEY"));
+      request["user"] = decode;
+    }
+
+    let user_uuid;
+    if (request.user !== undefined) {
+      user_uuid = request.user.user_uuid;
+    } else {
+      user_uuid = null;
+    }
 
     let articles = await ArticleService.listArticles(
       limit,
@@ -96,7 +110,7 @@ export default class ArticlesController {
 
     await request.validate(ArticleValidator.deleteArticle);
 
-    let article = await ArticleService.deleteArticle(article_id,author_uuid);
+    let article = await ArticleService.deleteArticle(article_id, author_uuid);
 
     if (article?.success === false) {
       return response

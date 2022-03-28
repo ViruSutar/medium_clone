@@ -1,7 +1,7 @@
 import Route from '@ioc:Adonis/Core/Route'
 
 Route.post('articles/createArticle','ArticlesController.createArticle').middleware('checkAccess')
-Route.get('articles/listArticles','ArticlesController.listArticles').middleware('checkAccess')
+Route.get('articles/listArticles','ArticlesController.listArticles')
 Route.get('articles/getArticleById','ArticlesController.getArticleById')
 Route.put('articles/updateArticle','ArticlesController.updateArticle').middleware('checkAccess')
 Route.get('articles/listTopAuthors','ArticlesController.listTopAuthors')
