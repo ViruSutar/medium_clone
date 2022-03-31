@@ -24,7 +24,9 @@ export default class AdminService{
         // TODO: filters
 
         let authors = await Database.query()
-          .select("users.name,users.profile_pic")
+          .select(Database.rawQuery(
+            "users.name,users.profile_pic"
+          ))
           .from("users")
           .whereRaw(
             Database.rawQuery("users.is_active = 1 AND users.role ='AUTHOR'")

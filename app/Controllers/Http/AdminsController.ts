@@ -9,7 +9,7 @@ export default class AdminsController {
     let user_uuid = request.user.user_uuid;
     let authors = await AdminService.listAuthors(limit, offset, user_uuid);
 
-    return response.send({ success: true, authors });
+    return response.send({ success: true, data:authors.Data });
   }
 
   public async createTag({ request, response }) {
