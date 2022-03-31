@@ -29,6 +29,10 @@ import './Routes/notification'
 import './Routes/auth'
 import './Routes/tag'
 import './Routes/follower'
+import './Routes/author'
+import './Routes/admin'
+
+
 
 
 
