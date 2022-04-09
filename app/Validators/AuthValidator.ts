@@ -44,7 +44,7 @@ export default class AuthValidator {
 	schema: schema.create({
         name: schema.string(),
         email: schema.string({}, [rules.email(),rules.unique({table:'users',column:'email'})]),
-        password: schema.string(),
+        password: schema.string({},[rules.minLength(10),rules.regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,16}$/)]),
       }),
 	  message: BaseValidator.messages,
   }

@@ -44,4 +44,8 @@ export default class NotificationsController {
 
     return response.send({ success: true });
   }
+
+  // public async subscribe({request,response}){
+    
+  // }
 }

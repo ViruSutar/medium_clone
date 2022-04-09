@@ -1,6 +1,7 @@
 import Database from "@ioc:Adonis/Lucid/Database";
 import Article from "App/Models/Article";
 import Follower from "App/Models/Follower";
+import SubscribersList from "App/Models/SubscribersList";
 import User from "App/Models/User";
 import NotificationService from "./NotificationService";
 
@@ -82,4 +83,18 @@ export default class FollowService {
 
     return { success: true };
   }
+
+  static async subscribe(user_uuid:string,author_id:string){
+
+   await SubscribersList.create({
+       user_uuid,
+       author_id
+     })
+
+     let user=await User.findBy("uuid",author_id)
+     let author_name=user?.name
+    
+     return {success:true,message:`You have subscribed to ${author_name}`}
+  }
 }
+

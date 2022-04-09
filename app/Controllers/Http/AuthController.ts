@@ -31,7 +31,6 @@ export default class AuthController {
         .status(user.status_code)
         .send({ success: false, message: user.message });
     }
-
     return response.status(200).send({ success: true, token: user.token });
   }
 }

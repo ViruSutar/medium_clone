@@ -30,6 +30,33 @@ export default class User extends BaseModel {
   @column()
   public is_active :boolean
 
+  
+  @column()
+  public cover_pic:string
+
+  
+  @column()
+  public profile_pic:string
+
+  
+  @column()
+  public twitter_link:string
+
+  
+  @column()
+  public instagram_link:string
+
+  
+  @column()
+  public linkedin_link:string
+
+  @column()
+  public personal_website_link:string
+
+  @column()
+  public user_bio:string
+
+
 
   @beforeSave()
   public static async hashPassword(user: User) {

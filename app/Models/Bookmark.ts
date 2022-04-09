@@ -11,6 +11,9 @@ export default class Bookmark extends BaseModel {
   @column()
   public article_id: number;
 
+  @column()
+  public bookmark_folder:string
+
   @column.dateTime({ autoCreate: true })
   public createdAt: DateTime;
 

@@ -4,8 +4,10 @@ import Database from "@ioc:Adonis/Lucid/Database";
 import Article from "App/Models/Article";
 import ArticlesImage from "App/Models/ArticlesImage";
 import ArticleTag from "App/Models/ArticleTag";
+import Follower from "App/Models/Follower";
 import User from "App/Models/User";
 import readingTime from "reading-time";
+import NotificationService from "./NotificationService";
 
 class ArticleService {
   static async createArticle(title, content, images, author_id, tags) {
@@ -17,6 +19,14 @@ class ArticleService {
     if (!author) {
       return { success: false, message: "User not found" };
     }
+
+    let find_user = await User.query()
+    .where("uuid", author_id)
+    .where("is_active", true);
+
+  if (find_user.length !== 0) {
+    return { success: false, status_code: 404, message: "User not found" };
+  }
 
     //  TODO: check unique tags or not
     if (images.length >= 4) {
@@ -68,6 +78,21 @@ class ArticleService {
       author.role = "AUTHOR";
       author.save();
     }
+
+    let followers = await Follower.query().where("followee", author_id);
+    let author_name = author.name;
+    if (followers) {
+      followers.map(async (data) => {
+        let followers = data.follower_id;
+        let message = `${author_name} has published new blog ${title}`;
+        await NotificationService.createNotification(
+          followers,
+          "article",
+          message
+        );
+      });
+    }
+
     return {
       success: true,
       articleId: article.id,

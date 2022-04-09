@@ -5,11 +5,11 @@ import BookMarkValidator from "App/Validators/BookMarkValidator";
 
 export default class BookMarksController {
   public async addBookMark({ request, response }) {
-    let { article_id } = request.all();
+    let { article_id,bookmark_folder } = request.all();
     let user_uuid = request.user.user_uuid;
 
     await request.validate(BookMarkValidator.addBookMark);
-   let bookmark=  await BookMarkService.addBookMark(user_uuid, article_id);
+   let bookmark=  await BookMarkService.addBookMark(user_uuid, article_id,bookmark_folder);
 
    if(bookmark.success === false){
      return response.status(bookmark.status_code).send({success:false,message:bookmark.message})

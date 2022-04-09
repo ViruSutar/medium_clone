@@ -3,5 +3,6 @@ export enum NotificationType {
  "likes"=20,
  "comments" = 30,
  "tags" = 40 ,
- "follwers" = 50
+ "follwers" = 50,
+ "article" = 60
 }

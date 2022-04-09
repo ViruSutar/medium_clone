@@ -25,13 +25,22 @@ export default class ExceptionHandler extends HttpExceptionHandler {
   }
 
   public async handle(error: any, ctx: HttpContextContract): Promise<any> {
-
+   
     if (error.code === "E_VALIDATION_FAILURE") {
+       
+      if(error.messages.errors[0].field === "password"){
+        return ctx.response.status(400).send({
+          success: false,
+          message: `password validation failed`,
+        });
+      }
+
       if (error.messages.errors[0].rule === "unique") {
         return ctx.response.status(400).send({
           success: false,
           message: `user with ${error.messages.errors[0].field} already exist`,
         });
+        
       }
 
       if(error.messages.errors[0].message === 'enum validation failed' ){
@@ -56,6 +65,8 @@ export default class ExceptionHandler extends HttpExceptionHandler {
         .status(400)
         .send({ success: false, message: "token expired please login again" });
     }
+
+    
     return ctx.response.status(400).send({ success: false, message: error });
   }
 }
