@@ -1,5 +1,7 @@
 import Database from "@ioc:Adonis/Lucid/Database";
 import FollowService from "App/Services/FollowService";
+import FollowerValidator from "App/Validators/FollowerValidator";
+
 
 export default class FollowersController {
   public async follow({ request, response }) {
@@ -25,4 +27,13 @@ export default class FollowersController {
     }
     return response.send({ success: true });
   }
+ 
+  public async listFollwers({request,response}){
+    let {user_uuid,limit,offset} =request.all()
+   await request.validate(FollowerValidator.listFollowers)
+    let data=await FollowService.listFollowers(user_uuid,limit,offset)
+
+    return response.send({success:true,data:data.data,total:data.total})
+  }
+
 }

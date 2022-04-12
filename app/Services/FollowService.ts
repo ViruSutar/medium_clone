@@ -84,17 +84,53 @@ export default class FollowService {
     return { success: true };
   }
 
-  static async subscribe(user_uuid:string,author_id:string){
+  // static async subscribe(user_uuid:string,author_id:string){
 
-   await SubscribersList.create({
-       user_uuid,
-       author_id
-     })
+  //  await SubscribersList.create({
+  //      user_uuid,
+  //      author_id
+  //    })
 
-     let user=await User.findBy("uuid",author_id)
-     let author_name=user?.name
+  //    let user=await User.findBy("uuid",author_id)
+  //    let author_name=user?.name
     
-     return {success:true,message:`You have subscribed to ${author_name}`}
-  }
-}
+  //    return {success:true,message:`You have subscribed to ${author_name}`}
+  // }
 
+  static async listFollowers(user_uuid:string,limit:string,offset:string){
+
+    if (!limit) {
+      limit = "1000000000000000";
+    }
+
+    if (!offset) {
+      offset = "0";
+    }
+    
+   let [data,total]= await Promise.all([
+    await Database.query()
+    .select(Database.rawQuery(
+      "users.name,users.profile_pic,users.user_bio"
+    ))
+    .from("followers")
+    .join("users","users.uuid","=","followers.follower_id")
+    .where("followers.followee",user_uuid)
+    .limit(parseInt(limit))
+    .offset(parseInt(offset))
+    ,
+    await Database.query()
+    .select(Database.rawQuery(
+      "count(distinct followers.id) as count"
+    ))
+    .from("followers")
+    .where("followers.followee",user_uuid)
+    .join("users","users.uuid","=","followers.follower_id")
+                             
+   ])
+
+   return{success:true,data,
+    total: total[0].length !== 0 ? total[0].count : 0,
+  }
+
+}
+}

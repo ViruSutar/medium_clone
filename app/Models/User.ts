@@ -28,7 +28,7 @@ export default class User extends BaseModel {
   public bookmark_id:string
 
   @column()
-  public is_active :boolean
+  public is_active:boolean
 
   
   @column()
