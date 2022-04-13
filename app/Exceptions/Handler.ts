@@ -23,11 +23,13 @@ export default class ExceptionHandler extends HttpExceptionHandler {
   constructor() {
     super(Logger);
   }
+ 
+  
 
   public async handle(error: any, ctx: HttpContextContract): Promise<any> {
    
     if (error.code === "E_VALIDATION_FAILURE") {
-       
+      
       if(error.messages.errors[0].field === "password"){
         return ctx.response.status(400).send({
           success: false,

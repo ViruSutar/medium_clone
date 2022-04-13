@@ -120,7 +120,7 @@ export default class FollowService {
     ,
     await Database.query()
     .select(Database.rawQuery(
-      "count(distinct followers.id) as count"
+      "count(distinct users.uuid) as count"
     ))
     .from("followers")
     .where("followers.followee",user_uuid)
@@ -128,6 +128,7 @@ export default class FollowService {
                              
    ])
 
+   
    return{success:true,data,
     total: total[0].length !== 0 ? total[0].count : 0,
   }

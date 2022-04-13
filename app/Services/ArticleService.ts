@@ -28,7 +28,6 @@ class ArticleService {
     return { success: false, status_code: 404, message: "User not found" };
   }
 
-    //  TODO: check unique tags or not
     if (images.length >= 4) {
       value = 1;
     }
