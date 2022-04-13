@@ -27,10 +27,10 @@ export default class AdminsController {
     return response.status(200).send({ success: true, tagId: tag.tagId });
   }
   public async deleteTag({ request, response }) {
-    let { tag_id } = request.all();
+    let { tag_id,reason } = request.all();
     let user_uuid = request.user.user_uuid;
 
-    let tag = await AdminService.deleteTag(tag_id, user_uuid);
+    let tag = await AdminService.deleteTag(tag_id, user_uuid,reason);
 
     if (tag.success === false) {
       return response

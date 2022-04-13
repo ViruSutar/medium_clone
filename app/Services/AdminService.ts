@@ -58,7 +58,7 @@ export default class AdminService{
         return { success: true, tagId: tag.id };
       }
 
-      static async deleteTag(tag_id: number, user_uuid: string) {
+      static async deleteTag(tag_id: number, user_uuid: string,reason:string) {
         // TODO: check admin and send notification to creator of tag
         let tag = await Tag.find(tag_id);
         if (!tag) {
@@ -67,6 +67,8 @@ export default class AdminService{
     
         tag.is_active = false;
         tag.save();
+        let tag_author=tag.user_uuid
+      await NotificationService.createNotification(tag_author,"tags", `reason: ${reason}`)
     
         return { success: true };
       }
