@@ -24,6 +24,7 @@
     "@adonisjs/session": "^6.1.2",
     "jsonwebtoken": "^8.5.1",
     "luxon": "^2.0.1",
+    "moment": "^2.29.3",
     "mysql": "^2.18.1",
     "phc-bcrypt": "^1.0.7",
     "proxy-addr": "^2.0.7",

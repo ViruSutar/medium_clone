@@ -4,10 +4,12 @@ import Database from "@ioc:Adonis/Lucid/Database";
 import Article from "App/Models/Article";
 import ArticlesImage from "App/Models/ArticlesImage";
 import ArticleTag from "App/Models/ArticleTag";
+import ArticleView from "App/Models/ArticleView";
 import Follower from "App/Models/Follower";
 import User from "App/Models/User";
 import readingTime from "reading-time";
 import NotificationService from "./NotificationService";
+import moment from "moment";
 
 class ArticleService {
   static async createArticle(title, content, images, author_id, tags) {
@@ -21,12 +23,12 @@ class ArticleService {
     }
 
     let find_user = await User.query()
-    .where("uuid", author_id)
-    .where("is_active", true);
+      .where("uuid", author_id)
+      .where("is_active", true);
 
-  if (find_user.length !== 0) {
-    return { success: false, status_code: 404, message: "User not found" };
-  }
+    if (find_user.length === 0) {
+      return { success: false, status_code: 404, message: "User not found" };
+    }
 
     if (images.length >= 4) {
       value = 1;
@@ -81,16 +83,23 @@ class ArticleService {
     let followers = await Follower.query().where("followee", author_id);
     let author_name = author.name;
     if (followers) {
-      followers.map(async (data) => {
+      await followers.map(async (data) => {
         let followers = data.follower_id;
         let message = `${author_name} has published new blog ${title}`;
-        await NotificationService.createNotification(
-          followers,
-          "article",
-          message
-        );
+        NotificationService.createNotification(followers, "article", message);
       });
     }
+
+    // TODO: use set date function to add date
+
+    let seven_days = moment(new Date(), "YYYY-MM-DD").add("7", "days").format("YYYY-MM-DD");
+    let thirty_days = moment(new Date(), "YYYY-MM-DD").add("30", "days").format("YYYY-MM-DD");
+    
+    await ArticleView.create({
+      article_id: article.id,
+      date_for_seven_days: seven_days,
+      date_for_thirty_days: thirty_days,
+    });
 
     return {
       success: true,
@@ -465,6 +474,16 @@ class ArticleService {
 
     article.is_active = false;
     article.save();
+  }
+
+  static async addViews(article_id: number) {
+    let article = await Article.find(article_id);
+
+    if (!article) {
+      return { success: false, message: "article not found" };
+    }
+
+    article?.createdAt;
   }
 }
 export default ArticleService;

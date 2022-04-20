@@ -23,6 +23,10 @@ export default class ArticlesController {
       author_uuid,
       tags
     );
+     
+    if(article.success=== false){
+      return response.status(article.status_code).send({success:false,message:article.message})
+    }
     return response.send({ success: true, articleId: article.articleId });
   }
 

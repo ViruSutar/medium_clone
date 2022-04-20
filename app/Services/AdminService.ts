@@ -1,5 +1,6 @@
 import Database from "@ioc:Adonis/Lucid/Database";
 import { TagEnums } from "App/Enum/TagEnums";
+import Article from "App/Models/Article";
 import Tag from "App/Models/Tag";
 import NotificationService from "./NotificationService";
 
@@ -59,7 +60,6 @@ export default class AdminService{
       }
 
       static async deleteTag(tag_id: number, user_uuid: string,reason:string) {
-        // TODO: check admin and send notification to creator of tag
         let tag = await Tag.find(tag_id);
         if (!tag) {
           return { success: false, status_code: 404, message: "Tag not found" };
@@ -184,5 +184,5 @@ export default class AdminService{
           .offset(parseFloat(offset));
     
         return { success: true, tags: tags.length !== 0 ? tags : "tags not found" };
-      }
+      }     
 }
