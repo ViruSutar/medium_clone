@@ -91,10 +91,13 @@ class ArticleService {
     }
 
     // TODO: use set date function to add date
+    let seven_days = moment(new Date(), "YYYY-MM-DD")
+      .add("7", "days")
+      .format("YYYY-MM-DD");
+    let thirty_days = moment(new Date(), "YYYY-MM-DD")
+      .add("30", "days")
+      .format("YYYY-MM-DD");
 
-    let seven_days = moment(new Date(), "YYYY-MM-DD").add("7", "days").format("YYYY-MM-DD");
-    let thirty_days = moment(new Date(), "YYYY-MM-DD").add("30", "days").format("YYYY-MM-DD");
-    
     await ArticleView.create({
       article_id: article.id,
       date_for_seven_days: seven_days,
@@ -217,13 +220,14 @@ class ArticleService {
                     articles_images.image_link as image,JSON_ARRAYAGG(tags.name) as tag_name,articles.reading_time,\
                     if((select id from likes where article_id = articles.id AND user_id = :user_uuid) is not null ,true,false)\
                     as is_liked ,if((select id from bookmarks where article_id = articles.id AND user_id = :user_uuid) is not null ,true,false)\
-                    as is_bookmarked\
+                    as is_bookmarked,if(article_views.overall_views is null ,0,article_views.overall_views) as article_views\
                      from articles \
                      join users on users.uuid=articles.author_id \
                      left join articles_images on articles_images.article_id = articles.id and is_cover = 1\
                      left join  article_tags on  article_tags.article_id = articles.id\
                      left join tags on article_tags.tag_id = tags.id \
                      left join trending_articles_dates on trending_articles_dates.id = articles.trending_articles_date\
+                     left join article_views on article_views.article_id = articles.id \
                      where articles.is_active = 1 AND articles.is_draft = 0 \
                       ' +
           weeklyTrendingQuery +
@@ -479,11 +483,44 @@ class ArticleService {
   static async addViews(article_id: number) {
     let article = await Article.find(article_id);
 
+    // TODO: run cron job like if current date is less than that date then add seven and thirty in that date and make views to zero
+
     if (!article) {
       return { success: false, message: "article not found" };
     }
 
-    article?.createdAt;
+    let article_views = await ArticleView.findBy("article_id", article_id);
+    let current_date = moment(new Date());
+
+    let seven_days_date = moment(article_views?.date_for_seven_days);
+    let thirty_days_date = moment(article_views?.date_for_thirty_days);
+
+    let seven_days_diff = seven_days_date.diff(current_date, "days");
+    let thirty_days_diff = thirty_days_date.diff(current_date, "days");
+
+    if (seven_days_diff >= 0) {
+      await Database.rawQuery(
+        "update article_views	 set article_views.seven_days_views =article_views.seven_days_views  + 1 \
+      where article_views.article_id = :article_id  ",
+        { article_id }
+      );
+    }
+
+    if (thirty_days_diff >= 0) {
+      await Database.rawQuery(
+        "update article_views	 set article_views.thirty_days_views = article_views.thirty_days_views + 1 \
+      where article_views.article_id = :article_id  ",
+        { article_id }
+      );
+    }
+
+    await Database.rawQuery(
+      "update article_views	 set article_views.overall_views =article_views.overall_views + 1 \
+    where article_views.article_id = :article_id  ",
+      { article_id }
+    );
+
+    return true;
   }
 }
 export default ArticleService;

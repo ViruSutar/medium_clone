@@ -365,4 +365,12 @@ export default class ArticlesController {
       return response.send({ success: false, message: error });
     }
   }
+
+  public async addViews({request,response}){
+    let {article_id}=request.all()
+
+    await ArticleService.addViews(article_id)
+
+    return response.send({success:true})
+  }
 }

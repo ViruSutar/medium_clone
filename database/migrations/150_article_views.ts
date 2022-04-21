@@ -6,12 +6,12 @@ export default class ArticleViews extends BaseSchema {
   public async up () {
     this.schema.createTable(this.tableName, (table) => {
       table.increments('id')
-      table.integer("article_id").notNullable().unsigned()
+      table.integer("article_id").notNullable().unsigned().unique()
       table.date('date_for_seven_days')
       table.date('date_for_thirty_days')
-      table.bigInteger('seven_days_views')
-      table.bigInteger('thirty_days_views')
-      table.bigInteger('overall_views')
+      table.bigInteger('seven_days_views').defaultTo(0)
+      table.bigInteger('thirty_days_views').defaultTo(0)
+      table.bigInteger('overall_views').defaultTo(0)
       
       table.index(["article_id"], "fk_article_views_article_id_idx");
 

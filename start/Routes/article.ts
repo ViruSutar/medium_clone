@@ -6,6 +6,8 @@ Route.get('articles/getArticleById','ArticlesController.getArticleById')
 Route.put('articles/updateArticle','ArticlesController.updateArticle').middleware('checkAccess')
 Route.get('articles/listTopAuthors','ArticlesController.listTopAuthors')
 Route.delete('articles/deleteArticle','ArticlesController.deleteArticle').middleware('checkAccess')
+Route.post('articles/views/add','ArticlesController.addViews')
+
 
 
 
