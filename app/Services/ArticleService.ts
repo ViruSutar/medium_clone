@@ -484,7 +484,7 @@ class ArticleService {
     let article = await Article.find(article_id);
 
     // TODO: run cron job like if current date is less than that date then add seven and thirty in that date and make views to zero
-
+    // TODO: check for ip address of a user so that one user cannot view multiple time or account id something like that
     if (!article) {
       return { success: false, message: "article not found" };
     }

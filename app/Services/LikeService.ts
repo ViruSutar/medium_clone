@@ -6,7 +6,6 @@ import User from "App/Models/User";
 import Article from "App/Models/Article";
 
 export default class LikeService {
-  //  TODO: we need to store something like user has already liked this article for the front end
   static async addLike(article_id, user_uuid) {
     let checkLike = await Like.query().whereRaw(
       Database.rawQuery("article_id = :article_id AND user_id = :user_uuid ", {
@@ -24,6 +23,7 @@ export default class LikeService {
     if (checkLike.length !== 0) {
       return {
         success: false,
+        status_code:400,
         message: "You have already liked on this article",
       };
     }

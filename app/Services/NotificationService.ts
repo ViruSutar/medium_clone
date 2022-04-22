@@ -8,7 +8,13 @@ export default class NotificationService {
   static async createNotification(user_uuid, type, notification) {
     // TODO: this is not working caught FATAL errors and send response on the front end
     await NotificationValidator.createNotification;
+     
+   let enum_arr=["mentions","likes","comments","tags","follwers","article"]
 
+   if(!enum_arr.includes(type)){
+     return {success:false,message:"wrong notification type entered"}
+   }
+   
     let typeEnum: any = NotificationType[type];
 
     Notification.create({

@@ -8,7 +8,6 @@ import Tag from "App/Models/Tag";
 import Tags from "Database/migrations/110_tags";
 
 export default class DraftService {
-  // TODO:create articles tags if at
   //   TODO: make auto save feature like hash node
   // TODO: on hashnode it saves the page when u stop typing keep that in mind
   static async createDraft(title, content, images, author_id, tags) {

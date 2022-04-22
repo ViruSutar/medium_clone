@@ -13,7 +13,6 @@ export default class AuthorService {
       offset = "0";
     }
 
-    //   TODO: add bio in select
     // TODO: start with design you need clarity
     // TODO: filters
     let [authors, total] = await Promise.all([
