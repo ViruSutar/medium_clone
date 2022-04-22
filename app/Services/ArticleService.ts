@@ -119,7 +119,8 @@ class ArticleService {
     user_uuid,
     weekly_trending,
     monthly_trending,
-    quarterly_trending
+    quarterly_trending,
+    sort_by_views
   ) {
     if (user_uuid === null) {
       user_uuid = null;
@@ -136,7 +137,7 @@ class ArticleService {
     let weeklyTrendingQuery = "";
     let monthlyTrendingQuery = "";
     let quarterlyTrendingQuery = "";
-
+    let orderByViewsQuery;
     if (limit != null && limit != "") {
       limitQuery = " limit :limit";
       params["limit"] = parseInt(limit);
@@ -164,6 +165,11 @@ class ArticleService {
     //   orderByLikes = " order by articles.likes_count desc ";
     // }
 
+    if(sort_by_views){
+      orderById = "";
+      orderByViewsQuery = "order by article_views.overall_views " + sort_by_views
+    }
+
     if (sort_by_date != null && sort_by_date != "") {
       orderById = "";
       orderByDate = " order by articles.created_at " + sort_by_date;
@@ -173,7 +179,7 @@ class ArticleService {
       params["author_name"] = author_name;
       authorNameQuery = " AND users.name = :author_name ";
     }
-    // TODO: switch case
+
     if (weekly_trending === "true") {
       orderByLikes = "";
       monthlyTrendingQuery = "";
@@ -239,6 +245,7 @@ class ArticleService {
           orderById +
           orderByLikes +
           orderByDate +
+          orderByViewsQuery + 
           limitQuery +
           offsetQuery,
         params

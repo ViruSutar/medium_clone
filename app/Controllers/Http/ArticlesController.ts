@@ -23,9 +23,11 @@ export default class ArticlesController {
       author_uuid,
       tags
     );
-     
-    if(article.success=== false){
-      return response.status(article.status_code).send({success:false,message:article.message})
+
+    if (article.success === false) {
+      return response
+        .status(article.status_code)
+        .send({ success: false, message: article.message });
     }
     return response.send({ success: true, articleId: article.articleId });
   }
@@ -40,6 +42,7 @@ export default class ArticlesController {
       weekly_trending,
       monthly_trending,
       quarterly_trending,
+      sort_by_views,
     } = request.all();
 
     const token = request.header("Authorization");
@@ -65,7 +68,8 @@ export default class ArticlesController {
       user_uuid,
       weekly_trending,
       monthly_trending,
-      quarterly_trending
+      quarterly_trending,
+      sort_by_views
     );
 
     return response.send({
@@ -366,11 +370,11 @@ export default class ArticlesController {
     }
   }
 
-  public async addViews({request,response}){
-    let {article_id}=request.all()
+  public async addViews({ request, response }) {
+    let { article_id } = request.all();
 
-    await ArticleService.addViews(article_id)
+    await ArticleService.addViews(article_id);
 
-    return response.send({success:true})
+    return response.send({ success: true });
   }
 }
