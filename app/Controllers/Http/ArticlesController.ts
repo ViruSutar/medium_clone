@@ -306,7 +306,7 @@ export default class ArticlesController {
       return response.send({ success: false, message: error });
     }
   }
-
+  
   public async updateSubcategories({ request, response }) {
     try {
       let { sub_category_id, sub_category } = request.all();
