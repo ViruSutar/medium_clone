@@ -31,6 +31,7 @@ import './Routes/tag'
 import './Routes/follower'
 import './Routes/author'
 import './Routes/admin'
+import './Routes/FrontEnd Routes/home'
 
 
 
